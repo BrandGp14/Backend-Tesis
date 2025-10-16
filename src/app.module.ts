@@ -7,12 +7,15 @@ import { RafflesModule } from './raffles/raffles.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRootAsync({
-      useFactory: getDatabaseConfig,
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => getDatabaseConfig(configService),
       inject: [ConfigService],
     }),
-    AuthModule,      // <-- IMPORTANTE: aquí importas tu módulo de autenticación
+    AuthModule,
     RafflesModule,
   ],
 })
