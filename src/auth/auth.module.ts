@@ -6,17 +6,19 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { UsersModule } from 'src/users/users.module';
 import { RolesModule } from 'src/roles/roles.module';
 import { JwtModule } from '@nestjs/jwt';
+import { jwtConfig } from 'src/config/jwt.config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     PassportModule,
     UsersModule,
     RolesModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1h' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => jwtConfig(configService),
     }),
-    
   ],
   providers: [AuthService, GoogleStrategy],
   controllers: [AuthController],

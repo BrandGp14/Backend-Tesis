@@ -6,11 +6,13 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   app.enableCors({
     origin: ['http://localhost:3000'],
@@ -35,5 +37,7 @@ async function bootstrap() {
 
   console.log(`🚀 API corriendo en http://localhost:${port}/api/raffles`);
   console.log(`📚 Swagger docs en http://localhost:${port}/api/docs`);
+  //login url
+  console.log(`📚 Login url in ${process.env.NEXT_AUTH_URL}`);
 }
 bootstrap();
