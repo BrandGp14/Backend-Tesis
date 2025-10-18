@@ -22,12 +22,12 @@ export class UploadFileService {
 
     if (!file) throw new BadRequestException('Archivo inválido: archivo enviado');
 
-    const { buffer, mimetype } = file;
+    const { buffer, mimetype, originalname } = file;
 
     if (!(buffer instanceof Buffer)) throw new BadRequestException('Archivo inválido: sin buffer');
 
     const { v6: UUIDv6 } = await import('uuid');
-    const uuid = UUIDv6() + UUIDv6();
+    const uuid = UUIDv6() + UUIDv6() + originalname;
 
     const formData = new FormData();
     formData.append('file', buffer, {
@@ -43,6 +43,8 @@ export class UploadFileService {
       }),
     );
 
-    return `https://${response.data.data.servers[0]}.gofile.io/${response.data.data.parentFolderCode}/${response.data.data.id}/${response.data.data.name}`;
+    return encodeURI(
+      `https://${response.data.data.servers[0]}.gofile.io/download/${response.data.data.id}/${response.data.data.name}`,
+    );
   }
 }
