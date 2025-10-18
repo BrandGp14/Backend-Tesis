@@ -1,4 +1,5 @@
 import {
+  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -32,12 +33,21 @@ export class Institution {
   @Column()
   domain: string;
 
-  @Column()
+  @Column({ nullable: true })
+  picture?: string;
+
+  @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt: Date = new Date();
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt: Date = new Date();
+
+  @BeforeInsert()
+  async beforeInsert() {
+    const { v6: UUIDv6 } = await import('uuid');
+    this.id = UUIDv6();
+  }
 }

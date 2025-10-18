@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ApiExceptionResponseFilter } from './api.exception.response.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -31,6 +32,8 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document); // La documentación estará en /api/docs
+
+  app.useGlobalFilters(new ApiExceptionResponseFilter());
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
