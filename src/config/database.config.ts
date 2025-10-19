@@ -2,13 +2,11 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
 
-export const getDatabaseConfig = (
-  configService: ConfigService,
-): TypeOrmModuleOptions => ({
+export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
   type: 'postgres',
   url: configService.get<string>('DATABASE_URL'),
   entities: [path.resolve(__dirname, '..') + '/**/*.entity{.ts,.js}'],
-  synchronize: false,
+  synchronize: true,
   ssl: { rejectUnauthorized: false },
   logging: false,
   extra: {

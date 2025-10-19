@@ -1,10 +1,15 @@
 import { Type } from 'class-transformer';
 import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
 
-export class CreateInstituteDto {
+export class InstitutionDto {
+
+  @IsOptional()
+  @IsString()
+  id: string;
+
   @IsString()
   @IsNotEmpty()
-  name: string;
+  description: string;
 
   @IsString()
   @IsNotEmpty()
@@ -33,5 +38,5 @@ export class CreateInstituteDto {
   @IsOptional()
   @IsBoolean()
   @Type(() => Boolean)
-  isActive: boolean = true;
+  enabled: boolean = true;
 }

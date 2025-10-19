@@ -24,7 +24,7 @@ export class UploadFileService {
       throw new Error('Falta la configuración necesaria para subir archivos');
     }
 
-    if (!file) throw new BadRequestException('Archivo inválido: archivo enviado');
+    if (!file) return null;
 
     const { buffer, mimetype, originalname } = file;
 

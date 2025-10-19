@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { RafflesModule } from './raffles/raffles.module';
 import { InstitutesModule } from './institutes/institutes.module';
 import { UploadFileModule } from './upload-file/upload-file.module';
+import { JWTAuthModule } from './jwt-auth/jwt-auth.module';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -21,6 +23,9 @@ import { UploadFileModule } from './upload-file/upload-file.module';
     RafflesModule,
     InstitutesModule,
     UploadFileModule,
+    JWTAuthModule,
   ],
+  exports: [TypeOrmModule],
+  providers: [JwtService],
 })
 export class AppModule {}

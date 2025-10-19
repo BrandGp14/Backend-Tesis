@@ -3,8 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Institution } from './entities/institute.entity';
 import { PagedResponse } from 'src/common/dto/paged.response.dto';
-import { CreateInstituteDto } from './dto/create-institute.dto';
+import { InstitutionDto } from './dto/institution.dto';
 import { UploadFileService } from 'src/upload-file/upload-file.service';
+import { UpdateInstituteDto } from './dto/update-institute.dto';
 
 @Injectable()
 export class InstitutesService {
@@ -12,37 +13,65 @@ export class InstitutesService {
     @InjectRepository(Institution)
     private readonly institutesRepository: Repository<Institution>,
     private readonly uploadFileService: UploadFileService,
-  ) {}
+  ) { }
 
-  async search(page: number, size: number): Promise<PagedResponse<Institution>> {
+  async search(page: number, size: number, enabled?: boolean): Promise<PagedResponse<InstitutionDto>> {
     const skip = (page - 1) * size;
+
     const [institutes, totalElements] = await this.institutesRepository.findAndCount({
       order: { createdAt: 'DESC' },
       skip: skip,
       take: size,
+      where: [enabled !== undefined ? { enabled: enabled } : {}],
     });
 
     const totalPage = Math.ceil(totalElements / size);
     const last = page >= totalPage;
 
-    return new PagedResponse<Institution>(institutes, page, size, totalPage, totalElements, last);
+    return new PagedResponse<InstitutionDto>(institutes.map(i => i.toDto()), page, size, totalPage, totalElements, last);
   }
 
-  async getInstitute(id: string): Promise<Institution | null> {
+  async getInstitute(id: string): Promise<InstitutionDto | undefined> {
     const institute = await this.institutesRepository.findOne({ where: { id } });
-    return institute;
+    if (!institute) return undefined
+    return institute.toDto();
   }
 
   async createInstitute(
     file: Express.Multer.File,
-    createInstituteDto: CreateInstituteDto,
-  ): Promise<Institution> {
+    createInstituteDto: InstitutionDto,
+  ): Promise<InstitutionDto> {
+
     //save here image from external storage and return url
+    const urlFile = await this.uploadFileService.uploadFile(file);
+
+    let institute = this.institutesRepository.create(createInstituteDto);
+    institute.createdBy = ''
+    institute.updatedBy = ''
+
+    if (urlFile) institute.picture = urlFile;
+
+    institute = await this.institutesRepository.save(institute);
+
+    return institute.toDto();
+  }
+
+  async updateInstitute(
+    id: string,
+    file: Express.Multer.File,
+    updateInstituteDto: UpdateInstituteDto,
+  ) {
+    let institute = await this.institutesRepository.findOne({ where: { id } });
+
+    if (!institute) return undefined;
 
     const urlFile = await this.uploadFileService.uploadFile(file);
 
-    const institute = this.institutesRepository.create(createInstituteDto);
-    institute.picture = urlFile;
-    return await this.institutesRepository.save(institute);
+    if (urlFile) institute.picture = urlFile;
+
+    institute.update(updateInstituteDto, id);
+
+    institute = await this.institutesRepository.save(institute);
+    return institute.toDto();
   }
 }

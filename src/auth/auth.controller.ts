@@ -5,13 +5,7 @@ import type { Session } from 'src/users/dto/user-google.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
-
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req) {
-    console.log(req);
-  }
+  constructor(private readonly authService: AuthService) {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))

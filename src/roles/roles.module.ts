@@ -13,11 +13,7 @@ import { RolePermissionController } from './role-permission.controller';
 @Module({
   imports: [TypeOrmModule.forFeature([Role, Permission, RolePermission])],
   providers: [RolesService, PermissionsService, RolePermissionService],
-  controllers: [
-    RolesController,
-    PermissionsController,
-    RolePermissionController,
-  ],
-  exports: [RolesService, PermissionsService, RolePermissionService],
+  controllers: [RolesController, PermissionsController, RolePermissionController],
+  exports: [RolesService, PermissionsService, RolePermissionService, TypeOrmModule],
 })
 export class RolesModule {}

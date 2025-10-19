@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Query,
   UploadedFile,
   UseInterceptors,
@@ -15,26 +16,27 @@ import { ApiResponse } from 'src/common/dto/api.response.dto';
 import { PageReference } from 'src/common/enum/page.reference';
 import { ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 import { PagedResponse } from 'src/common/dto/paged.response.dto';
-import { Institution } from './entities/institute.entity';
-import { CreateInstituteDto } from './dto/create-institute.dto';
+import { InstitutionDto } from './dto/institution.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdateInstituteDto } from './dto/update-institute.dto';
 
 @Controller('institutes')
 export class InstitutesController {
-  constructor(private readonly institutesService: InstitutesService) {}
+  constructor(private readonly institutesService: InstitutesService) { }
 
   @Get('/search')
   @ApiQuery({ name: 'page', required: false, type: Number, default: PageReference.PAGE })
   @ApiQuery({ name: 'size', required: false, type: Number, default: PageReference.SIZE })
   @ApiOkResponse({
-    description: 'Lista pagina de instituciones',
-    type: ApiResponse<PagedResponse<Institution>>,
+    description: 'Lista paginada de instituciones',
+    type: ApiResponse<PagedResponse<InstitutionDto>>,
   })
   async search(
     @Query('page', new DefaultValuePipe(PageReference.PAGE), ParseIntPipe) page: number,
     @Query('size', new DefaultValuePipe(PageReference.SIZE), ParseIntPipe) size: number,
+    @Query('enabled') enabled?: boolean,
   ) {
-    const institutes = await this.institutesService.search(page, size);
+    const institutes = await this.institutesService.search(page, size, enabled);
 
     return ApiResponse.success(institutes);
   }
@@ -50,9 +52,23 @@ export class InstitutesController {
   @UseInterceptors(FileInterceptor('file'))
   async createInstitute(
     @UploadedFile() file: Express.Multer.File,
-    @Body() createInstituteDto: CreateInstituteDto,
+    @Body() createInstituteDto: InstitutionDto,
   ) {
     const institute = await this.institutesService.createInstitute(file, createInstituteDto);
+    return ApiResponse.success(institute);
+  }
+
+  @Put(':id')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateInstitute(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() updateInstituteDto: UpdateInstituteDto,
+  ) {
+    const institute = await this.institutesService.updateInstitute(id, file, updateInstituteDto);
+
+    if (!institute) return ApiResponse.notFound('Institución no encontrada');
+
     return ApiResponse.success(institute);
   }
 }

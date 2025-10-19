@@ -2,8 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
+import { UserDto } from './dto/user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { PagedResponse } from 'src/common/dto/paged.response.dto';
+import { UserRole } from './entities/user-role.entity';
+import { Institution } from 'src/institutes/entities/institute.entity';
+import { JwtDto } from 'src/jwt-auth/dto/jwt.dto';
 
 @Injectable()
 export class UsersService {
@@ -12,33 +16,44 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) { }
 
-  findAll() {
-    return this.usersRepository.find();
+  async search(page: number, size: number, enabled?: boolean) {
+    const skip = (page - 1) * size;
+
+    const [users, totalElements] = await this.usersRepository.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: skip,
+      take: size,
+      where: [enabled !== undefined ? { enabled: enabled } : {}],
+    });
+
+    const totalPage = Math.ceil(totalElements / size);
+    const last = page >= totalPage;
+
+    return new PagedResponse<User>(users, page, size, totalPage, totalElements, last);
   }
 
-  findOne(id: string) {
-    return this.usersRepository.findOne({ where: { id } });
+  async find(id: string) {
+    const user = await this.usersRepository.findOne({ where: { id }, relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'] });
+    if (!user) return undefined;
+    return user.toDto();
   }
 
-  findByEmail(email: string) {
-    return this.usersRepository.findOne({ where: { email } });
+  async findByEmail(email: string) {
+    const user = await this.usersRepository.findOne({ where: { email }, relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'] });
+    if (!user) return undefined;
+    return user.toDto();
   }
 
-  async create(dto: CreateUserDto) {
-    const user = this.usersRepository.create(dto);
-    return this.usersRepository.save(user);
+  async create(dto: UserDto, jwtDto: JwtDto) {
+    let user = User.fromDto(dto, jwtDto.sub);
+    user = await this.usersRepository.save(user);
+    return user.toDto();
   }
 
-  async update(id: string, dto: UpdateUserDto) {
-    const user = await this.findOne(id);
+  async update(id: string, dto: UpdateUserDto, jwtDto: JwtDto) {
+    const user = await this.usersRepository.findOne({ where: { id }, relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'] });
     if (!user) throw new NotFoundException('User not found');
-    Object.assign(user, dto);
+    user.update(dto, jwtDto.sub);
     return this.usersRepository.save(user);
-  }
-
-  async remove(id: string) {
-    const user = await this.findOne(id);
-    if (!user) throw new NotFoundException('User not found');
-    return this.usersRepository.remove(user);
   }
 }
