@@ -39,7 +39,7 @@ export class AuthService {
     // 2. Buscar el usuario por email
     let user = await this.userRepository.findOne({
       where: { email, deleted: false },
-      relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'],
+      relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user'],
     });
 
     // 3. Si no existe, crearlo con el rol por defecto "STUDENT"
@@ -83,10 +83,12 @@ export class AuthService {
       email: user.email,
       role: userRole?.role.code ?? '',
       role_id: userRole?.role_id ?? '',
+      institution: institution.id,
     };
 
+    console.log(user)
+
     const token = this.jwtService.sign(payload);
-    const userDto = user.toDto()
     // 5. Retornar usuario y token
     return { 'user': user.toDto(), token };
   }

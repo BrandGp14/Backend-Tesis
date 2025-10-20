@@ -18,6 +18,6 @@ export class JwtAuthStrategy extends PassportStrategy(Strategy) {
     }
 
     validate(payload: JwtDto) {
-        return new JwtDto(payload.sub, payload.email, payload.role, payload.role_id);
+        return new JwtDto(payload.sub, payload.email, payload.role, payload.role_id, payload.institution);
     }
 }

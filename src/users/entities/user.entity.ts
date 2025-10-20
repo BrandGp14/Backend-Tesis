@@ -127,6 +127,7 @@ export class User {
     const dto = new UserDto();
     dto.id = this.id;
     dto.email = this.email;
+    console.log(this)
     dto.firstName = this.firstName;
     dto.lastName = this.lastName;
     dto.student_code = this.student_code;
