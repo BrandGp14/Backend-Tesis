@@ -33,7 +33,7 @@ export class PermissionsGuard implements CanActivate {
       relations: ['permission'],
     });
 
-    const userPermissionNames = rolePermissions.map(rp => rp.permission.name);
+    const userPermissionNames = rolePermissions.map(rp => rp.permission.code);
 
     // Deben tener TODOS los permisos requeridos
     return requiredPermissions.every(p => userPermissionNames.includes(p));

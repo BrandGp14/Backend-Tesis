@@ -23,23 +23,23 @@ export class UsersService {
       order: { createdAt: 'DESC' },
       skip: skip,
       take: size,
-      where: [enabled !== undefined ? { enabled: enabled } : {}],
+      where: [enabled !== undefined ? { enabled: enabled } : {}, { deleted: false }],
     });
 
     const totalPage = Math.ceil(totalElements / size);
     const last = page >= totalPage;
 
-    return new PagedResponse<User>(users, page, size, totalPage, totalElements, last);
+    return new PagedResponse<UserDto>(users.map(u => u.toDto()), page, size, totalPage, totalElements, last);
   }
 
   async find(id: string) {
-    const user = await this.usersRepository.findOne({ where: { id }, relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'] });
+    const user = await this.usersRepository.findOne({ where: { id, deleted: false }, relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'] });
     if (!user) return undefined;
     return user.toDto();
   }
 
   async findByEmail(email: string) {
-    const user = await this.usersRepository.findOne({ where: { email }, relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'] });
+    const user = await this.usersRepository.findOne({ where: { email, deleted: false }, relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'] });
     if (!user) return undefined;
     return user.toDto();
   }
@@ -51,7 +51,7 @@ export class UsersService {
   }
 
   async update(id: string, dto: UpdateUserDto, jwtDto: JwtDto) {
-    const user = await this.usersRepository.findOne({ where: { id }, relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'] });
+    const user = await this.usersRepository.findOne({ where: { id, deleted: false }, relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'] });
     if (!user) throw new NotFoundException('User not found');
     user.update(dto, jwtDto.sub);
     return this.usersRepository.save(user);

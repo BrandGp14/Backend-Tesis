@@ -38,7 +38,7 @@ export class AuthService {
 
     // 2. Buscar el usuario por email
     let user = await this.userRepository.findOne({
-      where: { email },
+      where: { email, deleted: false },
       relations: ['userRoles', 'institution', 'userRoles.role', 'userRoles.institution'],
     });
 
@@ -56,8 +56,6 @@ export class AuthService {
         lastName: profile.lastName,
         profile_photo_url: profile.picture,
         google_id: profile.id,
-        institution_id: institution.id,
-        institution: institution,
         createdBy: '',
         updatedBy: '',
       });

@@ -21,10 +21,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { JwtDto } from 'src/jwt-auth/dto/jwt.dto';
 import { JwtAuthService } from 'src/jwt-auth/jwt-auth.service';
 
-@ApiTags('users')
+@Controller('users')
 @ApiBearerAuth()
 @UseGuards(JwtAuthService)
-@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

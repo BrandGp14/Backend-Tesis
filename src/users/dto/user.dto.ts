@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { UserRoleDto } from './user-role.dto';
@@ -54,6 +54,7 @@ export class UserDto {
   enabled: boolean;
 
   @ApiPropertyOptional({ description: 'Roles del usuario por institución' })
+  @IsArray()
   @IsOptional()
   @Type(() => UserRoleDto)
   roles: UserRoleDto[];

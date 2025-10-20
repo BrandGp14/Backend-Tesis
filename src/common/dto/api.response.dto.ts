@@ -30,6 +30,10 @@ export class ApiResponse<T> {
     return new ApiResponse<T>(true, 200, 'OK', data);
   }
 
+  static deleted(): ApiResponse<any> {
+    return new ApiResponse<any>(true, 200, 'Objeto eliminado', undefined);
+  }
+
   static error<T>(message: string, code: number): ApiResponse<T> {
     return new ApiResponse<T>(true, code, message, undefined);
   }

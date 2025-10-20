@@ -9,18 +9,22 @@ import {
   Put,
   Query,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { InstitutesService } from './institutes.service';
 import { ApiResponse } from 'src/common/dto/api.response.dto';
 import { PageReference } from 'src/common/enum/page.reference';
-import { ApiOkResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 import { PagedResponse } from 'src/common/dto/paged.response.dto';
 import { InstitutionDto } from './dto/institution.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateInstituteDto } from './dto/update-institute.dto';
+import { JwtAuthService } from 'src/jwt-auth/jwt-auth.service';
 
 @Controller('institutes')
+@ApiBearerAuth()
+@UseGuards(JwtAuthService)
 export class InstitutesController {
   constructor(private readonly institutesService: InstitutesService) { }
 

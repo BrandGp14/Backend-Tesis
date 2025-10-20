@@ -4,16 +4,15 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
-import { Institution } from 'src/institutes/entities/institute.entity';
 import { UserRole } from './user-role.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserDto } from '../dto/user.dto';
-import { UserRoleDto } from '../dto/user-role.dto';
 @Entity('users')
+@Index('UQ_USER_EMAIL_UNIQUE_ON_DELETED_FALSE', ['email'], { unique: true, where: '"deleted" = false' })
+@Index(['id', 'email'])
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -21,7 +20,7 @@ export class User {
   @Column({ nullable: true })
   google_id: string;
 
-  @Column({ unique: true })
+  @Column()
   email: string;
 
   @Column()
@@ -66,15 +65,15 @@ export class User {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column({ type: 'uuid', nullable: false })
-  institution_id: string;
+  // @Column({ type: 'uuid', nullable: false })
+  // institution_id: string;
 
   @OneToMany(() => UserRole, (userRole) => userRole.user, { cascade: true })
   userRoles: UserRole[];
 
-  @ManyToOne(() => Institution)
-  @JoinColumn({ name: 'institution_id' })
-  institution: Institution;
+  // @ManyToOne(() => Institution)
+  // @JoinColumn({ name: 'institution_id' })
+  // institution: Institution;
 
   static fromDto(userDto: UserDto, userId: string) {
     const user = new User();
@@ -95,7 +94,7 @@ export class User {
       ]
     }
 
-    user.institution_id = userDto.institution!.id;
+    // user.institution_id = userDto.institution!.id;
 
     return user;
   }
@@ -114,7 +113,7 @@ export class User {
       ...user.roles!.filter((userRole) => !userRole.id).map((userRole) => UserRole.fromDto(userRole, userId))
     ]
 
-    this.institution_id = user.institution!.id;
+    // this.institution_id = user.institution!.id;
 
     this.updatedBy = userId;
   }
@@ -137,6 +136,9 @@ export class User {
     dto.picture = this.profile_photo_url;
     dto.last_login = this.last_login;
     dto.enabled = this.enabled;
+
+    dto.roles = this.userRoles.map(ur => ur.toDto());
+
     return dto;
   }
 }

@@ -13,7 +13,11 @@ export class InstitutionDto {
 
   @IsString()
   @IsNotEmpty()
-  ruc: string;
+  document_number: string;
+
+  @IsString()
+  @IsNotEmpty()
+  document_type: string;
 
   @IsString()
   @IsNotEmpty()

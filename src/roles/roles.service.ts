@@ -4,36 +4,71 @@ import { Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
 import { RoleDto } from './dto/role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { PagedResponse } from 'src/common/dto/paged.response.dto';
+import { JwtDto } from 'src/jwt-auth/dto/jwt.dto';
 
 @Injectable()
 export class RolesService {
   constructor(
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
-  ) {}
+  ) { }
 
-  async create(createRoleDto: RoleDto): Promise<RoleDto> {
-    let role = this.roleRepository.create(createRoleDto);
-    role.createdBy = ''
-    role.updatedBy = ''
+  async search(page: number, size: number, enabled?: boolean) {
+    const skip = (page - 1) * size;
+
+    const [roles, totalElements] = await this.roleRepository.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: skip,
+      take: size,
+      where: [enabled !== undefined ? { enabled: enabled } : {}],
+    });
+
+    const totalPage = Math.ceil(totalElements / size);
+    const last = page >= totalPage;
+
+    return new PagedResponse<RoleDto>(roles.map(r => r.toDto()), page, size, totalPage, totalElements, last);
+  }
+
+  async find(id: string) {
+    const role = await this.getRoleWithRelations(id, ['rolePermissions', 'rolePermissions.permission']);
+    return role?.toDto();
+  }
+
+  async create(createRoleDto: RoleDto, jwtDto: JwtDto) {
+    let role = Role.fromDto(createRoleDto, jwtDto.sub);
+
     role = await this.roleRepository.save(role);
-    return role.toDto();
+
+    const roleI = await this.getRoleWithRelations(role.id, ['rolePermissions', 'rolePermissions.permission']);
+
+    return roleI?.toDto();
   }
 
-  async findAll(): Promise<Role[]> {
-    return await this.roleRepository.find();
+  async update(id: string, updateRoleDto: UpdateRoleDto, jwtDto: JwtDto) {
+    let role = await this.getRoleWithRelations(id, ['rolePermissions', 'rolePermissions.permission']);
+
+    if (!role) return undefined;
+
+    role.update(updateRoleDto, jwtDto.sub);
+    role = await this.roleRepository.save(role);
+
+    role = await this.getRoleWithRelations(id, ['rolePermissions', 'rolePermissions.permission']);
+
+    return role?.toDto();
   }
 
-  async findOne(id: string): Promise<Role | null> {
-    return await this.roleRepository.findOne({ where: { id } });
+  async delete(id: string, jwtDto: JwtDto) {
+    let role = await this.getRoleWithRelations(id, ['rolePermissions']);
+    if (!role) return undefined;
+
+    role.delete(jwtDto.sub);
+    role = await this.roleRepository.save(role);
+
+    return role?.id
   }
 
-  async update(id: string, updateRoleDto: UpdateRoleDto): Promise<Role | null> {
-    await this.roleRepository.update(id, updateRoleDto);
-    return this.findOne(id);
-  }
-
-  async remove(id: string): Promise<void> {
-    await this.roleRepository.delete(id);
+  private async getRoleWithRelations(id: string, relationsI: string[]) {
+    return await this.roleRepository.findOne({ where: { id, deleted: false }, relations: relationsI ? relationsI : [] });
   }
 }

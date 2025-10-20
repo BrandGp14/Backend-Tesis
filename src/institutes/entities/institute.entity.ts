@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -10,6 +11,9 @@ import { UpdateInstituteDto } from '../dto/update-institute.dto';
 import { InstitutionDto } from '../dto/institution.dto';
 
 @Entity('institutions')
+@Index('UQ_INSTITUTION_DOMAIN_UNIQUE_ON_DELETED_FALSE', ['domain'], { unique: true, where: '"deleted" = false' })
+@Index('UQ_INSTITUTION_DOCUMENT_NUMBER_UNIQUE_ON_DELETED_FALSE', ['document_number'], { unique: true, where: '"deleted" = false' })
+@Index(['id', 'document_number'])
 export class Institution {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -17,8 +21,11 @@ export class Institution {
   @Column()
   description: string;
 
-  @Column({ unique: true })
-  ruc: string;
+  @Column()
+  document_number: string;
+
+  @Column()
+  document_type: string;
 
   @Column()
   address: string;
@@ -32,7 +39,7 @@ export class Institution {
   @Column()
   website: string;
 
-  @Column({ unique: true })
+  @Column()
   domain: string;
 
   @Column({ nullable: true })
@@ -71,7 +78,8 @@ export class Institution {
     const dto = new InstitutionDto();
     dto.id = this.id;
     dto.description = this.description;
-    dto.ruc = this.ruc;
+    dto.document_number = this.document_number;
+    dto.document_type = this.document_type;
     dto.address = this.address;
     dto.phone = this.phone;
     dto.email = this.email;
