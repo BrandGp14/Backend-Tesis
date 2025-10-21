@@ -19,18 +19,21 @@ export class RafflesService {
   async search(page: number, size: number, enabled?: boolean, institution?: string, organizer?: string) {
     const skip = (page - 1) * size;
 
-    const [raffles, totalElements] = await this.raffleRepository.findAndCount({
-      order: { createdAt: 'DESC' },
-      skip: skip,
-      take: size,
-      where: [
-        enabled !== undefined ? { enabled: enabled } : {},
-        institution !== undefined ? { institution_id: institution } : {},
-        organizer !== undefined ? { organizer_id: organizer } : {},
-        { deleted: false, raffleImages: { deleted: false } }
-      ],
-      relations: ['raffleImages', 'user', 'institution']
-    });
+    const query = this.raffleRepository.createQueryBuilder('raffle')
+      .leftJoinAndSelect('raffle.raffleImages', 'raffleImages', 'raffleImages.deleted = false')
+      .leftJoinAndSelect('raffle.user', 'user')
+      .leftJoinAndSelect('raffle.institution', 'institution')
+      .where('raffle.deleted = false');
+
+    if (enabled !== undefined) query.andWhere('raffle.enabled = :enabled', { enabled });
+    if (institution !== undefined) query.andWhere('institution.id = :institution', { institution });
+    if (organizer !== undefined) query.andWhere('user.id = :organizer', { organizer });
+
+    const [raffles, totalElements] = await query
+      .orderBy('raffle.createdAt', 'DESC')
+      .skip(skip)
+      .take(size)
+      .getManyAndCount();
 
     const totalPage = Math.ceil(totalElements / size);
     const last = page >= totalPage;

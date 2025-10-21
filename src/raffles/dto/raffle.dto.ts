@@ -77,7 +77,15 @@ export class RaffleDto {
 
   @IsEnum(RaffleStatusReference)
   @IsOptional()
-  status: RaffleStatusReference;
+  @Transform(
+    ({ value }) => {
+      console.log(value);
+      if (typeof value !== 'string' && !RaffleStatusReference[value as keyof typeof RaffleStatusReference]) throw new Error('Invalid RaffleStatusReference');
+      return RaffleStatusReference[value as keyof typeof RaffleStatusReference];
+    },
+    { toClassOnly: true }
+  )
+  status?: RaffleStatusReference | keyof typeof RaffleStatusReference;
 
   @IsBoolean()
   @IsOptional()

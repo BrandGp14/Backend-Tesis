@@ -5,6 +5,7 @@ import { RaffleImage } from './rafle-image.entity';
 import { Institution } from 'src/institutes/entities/institute.entity';
 import { User } from 'src/users/entities/user.entity';
 import { RaffleStatusReference } from '../type/raffle.status.reference';
+import { instanceToPlain } from 'class-transformer';
 
 @Entity('raffles')
 @Index(['id', 'winner', 'institution_id'])
@@ -110,7 +111,7 @@ export class Raffle {
     raffle.updatedBy = userId;
 
     if (raffleDto.allowExternalParticipants != undefined) raffle.allowExternalParticipants = raffleDto.allowExternalParticipants;
-    if (raffleDto.status !== undefined) raffle.status = raffleDto.status;
+    if (raffleDto.status !== undefined) raffle.status = raffleDto.status as RaffleStatusReference;
     if (raffleDto.enabled !== undefined) raffle.enabled = raffleDto.enabled;
 
     if (raffleDto.raffleImages.length > 0) {
@@ -162,7 +163,7 @@ export class Raffle {
     dto.allowExternalParticipants = this.allowExternalParticipants;
     dto.winner = this.winner;
     dto.drawDate = this.drawDate;
-    dto.status = this.status;
+    dto.status = RaffleStatusReference[this.status] as keyof typeof RaffleStatusReference;
     dto.enabled = this.enabled;
     dto.institution_id = this.institution_id;
     dto.institutionDescription = this.institution.description;
@@ -170,6 +171,8 @@ export class Raffle {
     dto.organizerDescription = this.user.firstName + ' ' + this.user.lastName;
 
     if (this.raffleImages) dto.raffleImages = this.raffleImages?.map(ri => ri.toDto());
+
+
     return dto;
   }
 }
