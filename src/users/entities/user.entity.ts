@@ -10,6 +10,7 @@ import {
 import { UserRole } from './user-role.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserDto } from '../dto/user.dto';
+import { Raffle } from 'src/raffles/entities/raffle.entity';
 @Entity('users')
 @Index('UQ_USER_EMAIL_UNIQUE_ON_DELETED_FALSE', ['email'], { unique: true, where: '"deleted" = false' })
 @Index(['id', 'email'])
@@ -65,15 +66,11 @@ export class User {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // @Column({ type: 'uuid', nullable: false })
-  // institution_id: string;
-
   @OneToMany(() => UserRole, (userRole) => userRole.user, { cascade: true })
   userRoles: UserRole[];
 
-  // @ManyToOne(() => Institution)
-  // @JoinColumn({ name: 'institution_id' })
-  // institution: Institution;
+  @OneToMany(() => Raffle, (raffle) => raffle.user)
+  raffles: Raffle[];
 
   static fromDto(userDto: UserDto, userId: string) {
     const user = new User();
@@ -127,7 +124,6 @@ export class User {
     const dto = new UserDto();
     dto.id = this.id;
     dto.email = this.email;
-    console.log(this)
     dto.firstName = this.firstName;
     dto.lastName = this.lastName;
     dto.student_code = this.student_code;

@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateRaffleDto } from './create-raffle.dto';
+import { RaffleDto } from './raffle.dto';
 
-export class UpdateRaffleDto extends PartialType(CreateRaffleDto) {}
+export class UpdateRaffleDto extends PartialType(RaffleDto) {}

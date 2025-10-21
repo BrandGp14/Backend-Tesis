@@ -1,0 +1,115 @@
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsDateString,
+  IsBoolean,
+  IsEnum,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
+import { RaffleStatusReference } from '../type/raffle.status.reference';
+import { RaffleImageDto } from './raffle-image.dto';
+import { plainToInstance, Transform, Type } from 'class-transformer';
+
+export class RaffleDto {
+  @IsString()
+  @IsOptional()
+  id: string;
+
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @IsString()
+  @IsOptional()
+  description: string;
+
+  @IsString()
+  @IsNotEmpty()
+  currencyCode: string;
+
+  @IsString()
+  @IsNotEmpty()
+  currencySymbol: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @Type(() => Number)
+  price: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @Type(() => Number)
+  available: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @Type(() => Number)
+  sold: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @Type(() => Number)
+  maxPerUser: number;
+
+  @IsDateString()
+  @IsNotEmpty()
+  startDate: Date;
+
+  @IsDateString()
+  @IsNotEmpty()
+  endDate: Date;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  @Type(() => Boolean)
+  allowExternalParticipants: boolean;
+
+  @IsString()
+  @IsOptional()
+  winner: string;
+
+  @IsDateString()
+  @IsNotEmpty()
+  drawDate: Date;
+
+  @IsEnum(RaffleStatusReference)
+  @IsOptional()
+  status: RaffleStatusReference;
+
+  @IsBoolean()
+  @IsOptional()
+  @Type(() => Boolean)
+  enabled: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  institution_id: string;
+
+  @IsString()
+  @IsNotEmpty()
+  institutionDescription: string;
+
+  @IsString()
+  @IsNotEmpty()
+  organizer_id: string;
+
+  @IsString()
+  @IsNotEmpty()
+  organizerDescription: string;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => RaffleImageDto)
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      const raffleImages = JSON.parse(value);
+      return plainToInstance(RaffleImageDto, raffleImages);
+    }
+    return value;
+  })
+  raffleImages: RaffleImageDto[] = [];
+}

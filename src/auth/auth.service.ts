@@ -86,8 +86,6 @@ export class AuthService {
       institution: institution.id,
     };
 
-    console.log(user)
-
     const token = this.jwtService.sign(payload);
     // 5. Retornar usuario y token
     return { 'user': user.toDto(), token };

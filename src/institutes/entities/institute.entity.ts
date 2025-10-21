@@ -4,11 +4,13 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { UpdateInstituteDto } from '../dto/update-institute.dto';
 import { InstitutionDto } from '../dto/institution.dto';
+import { Raffle } from 'src/raffles/entities/raffle.entity';
 
 @Entity('institutions')
 @Index('UQ_INSTITUTION_DOMAIN_UNIQUE_ON_DELETED_FALSE', ['domain'], { unique: true, where: '"deleted" = false' })
@@ -62,6 +64,24 @@ export class Institution {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => Raffle, (raffle) => raffle.institution)
+  raffles: Raffle[];
+
+  static fromDto(instituteDto: InstitutionDto, userId: string) {
+    const institute = new Institution();
+    institute.description = instituteDto.description;
+    institute.document_number = instituteDto.document_number;
+    institute.document_type = instituteDto.document_type;
+    institute.address = instituteDto.address;
+    institute.phone = instituteDto.phone;
+    institute.email = instituteDto.email;
+    institute.website = instituteDto.website;
+    institute.domain = instituteDto.domain;
+    institute.createdBy = userId;
+    institute.updatedBy = userId;
+    return institute;
+  }
 
   update(institute: UpdateInstituteDto, userId: string) {
     Object.assign(this, institute);
