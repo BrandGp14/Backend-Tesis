@@ -79,7 +79,6 @@ export class RaffleDto {
   @IsOptional()
   @Transform(
     ({ value }) => {
-      console.log(value);
       if (typeof value !== 'string' && !RaffleStatusReference[value as keyof typeof RaffleStatusReference]) throw new Error('Invalid RaffleStatusReference');
       return RaffleStatusReference[value as keyof typeof RaffleStatusReference];
     },
@@ -99,6 +98,14 @@ export class RaffleDto {
   @IsString()
   @IsNotEmpty()
   institutionDescription: string;
+
+  @IsString()
+  @IsNotEmpty()
+  institution_department_id: string;
+
+  @IsString()
+  @IsNotEmpty()
+  institutionDepartmentDescription: string;
 
   @IsString()
   @IsNotEmpty()

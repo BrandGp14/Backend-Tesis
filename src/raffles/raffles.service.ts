@@ -23,6 +23,7 @@ export class RafflesService {
       .leftJoinAndSelect('raffle.raffleImages', 'raffleImages', 'raffleImages.deleted = false')
       .leftJoinAndSelect('raffle.user', 'user')
       .leftJoinAndSelect('raffle.institution', 'institution')
+      .leftJoinAndSelect('raffle.department', 'department')
       .where('raffle.deleted = false');
 
     if (enabled !== undefined) query.andWhere('raffle.enabled = :enabled', { enabled });
@@ -42,7 +43,11 @@ export class RafflesService {
   }
 
   async findOne(id: string) {
-    const raffle = await this.raffleRepository.findOne({ where: { id, deleted: false, raffleImages: { deleted: false } }, relations: ['raffleImages', 'user', 'institution'] });
+    const raffle = await this.raffleRepository.findOne(
+      {
+        where: { id, deleted: false, raffleImages: { deleted: false } },
+        relations: ['raffleImages', 'user', 'institution', 'department'],
+      });
     return raffle?.toDto();
   }
 
@@ -65,13 +70,18 @@ export class RafflesService {
     let raffle = Raffle.fromDto(dto, jwtDto.sub);
     raffle = await this.raffleRepository.save(raffle);
 
-    const raffleI = await this.raffleRepository.findOne({ where: { id: raffle.id }, relations: ['raffleImages', 'user', 'institution'] });
+    const raffleI = await this.raffleRepository.findOne({ where: { id: raffle.id }, relations: ['raffleImages', 'user', 'institution', 'department'] });
 
     return raffleI?.toDto();
   }
 
   async update(id: string, files: Express.Multer.File[], dto: RaffleDto, jwtDto: JwtDto) {
-    let raffle = await this.raffleRepository.findOne({ where: { id, deleted: false, raffleImages: { deleted: false } }, relations: ['raffleImages', 'user', 'institution'] });
+    let raffle = await this.raffleRepository.findOne(
+      {
+        where: { id, deleted: false, raffleImages: { deleted: false } },
+        relations: ['raffleImages', 'user', 'institution', 'department'],
+      }
+    );
     if (!raffle) return undefined;
 
     const uploadFiles = await Promise.all(
@@ -91,12 +101,20 @@ export class RafflesService {
     raffle.update(dto, jwtDto.sub);
     await this.raffleRepository.save(raffle);
 
-    raffle = await this.raffleRepository.findOne({ where: { id: raffle.id, deleted: false, raffleImages: { deleted: false } }, relations: ['raffleImages', 'user', 'institution'] });
+    raffle = await this.raffleRepository.findOne(
+      {
+        where: { id: raffle.id, deleted: false, raffleImages: { deleted: false } },
+        relations: ['raffleImages', 'user', 'institution', 'department'],
+      });
     return raffle?.toDto();
   }
 
   async remove(id: string, jwtDto: JwtDto) {
-    let raffle = await this.raffleRepository.findOne({ where: { id, deleted: false, raffleImages: { deleted: false } }, relations: ['raffleImages', 'user', 'institution'] });
+    let raffle = await this.raffleRepository.findOne(
+      {
+        where: { id, deleted: false, raffleImages: { deleted: false } },
+        relations: ['raffleImages', 'user', 'institution', 'department'],
+      });
     if (!raffle) return undefined;
 
     raffle.delete(jwtDto.sub);

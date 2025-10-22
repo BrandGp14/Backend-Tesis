@@ -46,18 +46,15 @@ export class InstitutesController {
   }
 
   @Get('/:id')
-  async getInstitute(@Param('id') id: string) {
-    const institute = await this.institutesService.getInstitute(id);
+  async findOne(@Param('id') id: string) {
+    const institute = await this.institutesService.findOne(id);
     if (!institute) return ApiResponse.notFound('Institución no encontrada');
     return ApiResponse.success(institute);
   }
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
-  async createInstitute(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() createInstituteDto: InstitutionDto,
-  ) {
+  async createInstitute(@UploadedFile() file: Express.Multer.File, @Body() createInstituteDto: InstitutionDto) {
     const institute = await this.institutesService.createInstitute(file, createInstituteDto);
     return ApiResponse.success(institute);
   }

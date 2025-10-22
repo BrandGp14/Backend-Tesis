@@ -6,9 +6,10 @@ import { Institution } from 'src/institutes/entities/institute.entity';
 import { User } from 'src/users/entities/user.entity';
 import { RaffleStatusReference } from '../type/raffle.status.reference';
 import { instanceToPlain } from 'class-transformer';
+import { InstitutionDepartment } from 'src/institutes/entities/institution-department.entity';
 
 @Entity('raffles')
-@Index(['id', 'winner', 'institution_id'])
+@Index(['id', 'winner', 'institution_id', 'institution_department_id', 'organizer_id'])
 export class Raffle {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -59,6 +60,9 @@ export class Raffle {
   institution_id: string;
 
   @Column({ type: 'uuid', nullable: false })
+  institution_department_id: string;
+
+  @Column({ type: 'uuid', nullable: false })
   organizer_id: string;
 
   @Column({ type: 'boolean', default: true })
@@ -83,6 +87,10 @@ export class Raffle {
   @JoinColumn({ name: 'institution_id' })
   institution: Institution;
 
+  @ManyToOne(() => InstitutionDepartment, (institutionDepartment) => institutionDepartment.raffles)
+  @JoinColumn({ name: 'institution_department_id' })
+  department: InstitutionDepartment;
+
   @ManyToOne(() => User, (user) => user.raffles)
   @JoinColumn({ name: 'organizer_id' })
   user: User;
@@ -106,6 +114,7 @@ export class Raffle {
     raffle.winner = raffleDto.winner;
     raffle.drawDate = raffleDto.drawDate;
     raffle.institution_id = raffleDto.institution_id;
+    raffle.institution_department_id = raffleDto.institution_department_id;
     raffle.organizer_id = raffleDto.organizer_id;
     raffle.createdBy = userId;
     raffle.updatedBy = userId;
@@ -167,6 +176,8 @@ export class Raffle {
     dto.enabled = this.enabled;
     dto.institution_id = this.institution_id;
     dto.institutionDescription = this.institution.description;
+    dto.institution_department_id = this.institution_department_id;
+    dto.institutionDepartmentDescription = this.department.description;
     dto.organizer_id = this.organizer_id;
     dto.organizerDescription = this.user.firstName + ' ' + this.user.lastName;
 

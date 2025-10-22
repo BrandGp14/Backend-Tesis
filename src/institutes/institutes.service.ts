@@ -31,16 +31,12 @@ export class InstitutesService {
     return new PagedResponse<InstitutionDto>(institutes.map(i => i.toDto()), page, size, totalPage, totalElements, last);
   }
 
-  async getInstitute(id: string): Promise<InstitutionDto | undefined> {
-    const institute = await this.institutesRepository.findOne({ where: { id } });
-    if (!institute) return undefined
-    return institute.toDto();
+  async findOne(id: string): Promise<InstitutionDto | undefined> {
+    const institute = await this.institutesRepository.findOne({ where: { id, deleted: false, departments: { deleted: false } }, relations: ['departments'] });
+    return institute?.toDto();
   }
 
-  async createInstitute(
-    file: Express.Multer.File,
-    createInstituteDto: InstitutionDto,
-  ): Promise<InstitutionDto> {
+  async createInstitute(file: Express.Multer.File, createInstituteDto: InstitutionDto) {
 
     //save here image from external storage and return url
     const urlFile = await this.uploadFileService.uploadFile(file);
@@ -53,7 +49,9 @@ export class InstitutesService {
 
     institute = await this.institutesRepository.save(institute);
 
-    return institute.toDto();
+    const instituteI = await this.institutesRepository.findOne({ where: { id: institute.id }, relations: ['departments'] });
+
+    return instituteI?.toDto();
   }
 
   async updateInstitute(
@@ -61,7 +59,7 @@ export class InstitutesService {
     file: Express.Multer.File,
     updateInstituteDto: UpdateInstituteDto,
   ) {
-    let institute = await this.institutesRepository.findOne({ where: { id } });
+    let institute = await this.institutesRepository.findOne({ where: { id, deleted: false, departments: { deleted: false } }, relations: ['departments'] });
 
     if (!institute) return undefined;
 
@@ -72,6 +70,9 @@ export class InstitutesService {
     institute.update(updateInstituteDto, id);
 
     institute = await this.institutesRepository.save(institute);
-    return institute.toDto();
+
+    institute = await this.institutesRepository.findOne({ where: { id: institute.id, deleted: false, departments: { deleted: false } }, relations: ['departments'] });
+
+    return institute?.toDto();
   }
 }

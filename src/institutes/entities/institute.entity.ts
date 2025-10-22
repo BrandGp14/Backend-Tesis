@@ -1,5 +1,4 @@
 import {
-  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -11,6 +10,7 @@ import {
 import { UpdateInstituteDto } from '../dto/update-institute.dto';
 import { InstitutionDto } from '../dto/institution.dto';
 import { Raffle } from 'src/raffles/entities/raffle.entity';
+import { InstitutionDepartment } from './institution-department.entity';
 
 @Entity('institutions')
 @Index('UQ_INSTITUTION_DOMAIN_UNIQUE_ON_DELETED_FALSE', ['domain'], { unique: true, where: '"deleted" = false' })
@@ -68,6 +68,9 @@ export class Institution {
   @OneToMany(() => Raffle, (raffle) => raffle.institution)
   raffles: Raffle[];
 
+  @OneToMany(() => InstitutionDepartment, (institutionDepartment) => institutionDepartment.institution, { cascade: true })
+  departments: InstitutionDepartment[];
+
   static fromDto(instituteDto: InstitutionDto, userId: string) {
     const institute = new Institution();
     institute.description = instituteDto.description;
@@ -80,18 +83,37 @@ export class Institution {
     institute.domain = instituteDto.domain;
     institute.createdBy = userId;
     institute.updatedBy = userId;
+
+    if (instituteDto.departments.length > 0) {
+      institute.departments = [
+        ...instituteDto.departments.map((institutionDepartmentDto) => InstitutionDepartment.fromDto(institutionDepartmentDto, userId))
+      ]
+    }
     return institute;
   }
 
   update(institute: UpdateInstituteDto, userId: string) {
     Object.assign(this, institute);
     this.updatedBy = userId;
+
+    this.departments.forEach((department) => {
+      const departmentOp = institute.departments?.find((departmentOp) => departmentOp.id === department.id);
+      if (departmentOp) department.update(departmentOp, userId);
+      else department.delete(userId);
+    })
+
+    this.departments = [
+      ...this.departments,
+      ...institute.departments!.filter((department) => !department.id).map((department) => InstitutionDepartment.fromDto(department, userId))
+    ]
   }
 
   delete(userId: string) {
     this.enabled = false;
     this.deleted = true;
     this.updatedBy = userId;
+
+    this.departments.forEach((department) => { department.delete(userId); })
   }
 
   toDto(): InstitutionDto {

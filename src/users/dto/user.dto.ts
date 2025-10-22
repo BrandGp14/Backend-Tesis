@@ -53,13 +53,13 @@ export class UserDto {
   @IsOptional()
   enabled: boolean;
 
+  @ApiPropertyOptional({ description: 'Institución del usuario' })
+  @Type(() => InstitutionDto)
+  institution: InstitutionDto;
+
   @ApiPropertyOptional({ description: 'Roles del usuario por institución' })
   @IsArray()
   @IsOptional()
   @Type(() => UserRoleDto)
   roles: UserRoleDto[] = [];
-
-  @ApiPropertyOptional({ description: 'Institución del usuario' })
-  @Type(() => InstitutionDto)
-  institution: InstitutionDto;
 }

@@ -51,9 +51,16 @@ export class UsersService {
   }
 
   async update(id: string, dto: UpdateUserDto, jwtDto: JwtDto) {
-    const user = await this.usersRepository.findOne({ where: { id, deleted: false }, relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user'] });
+    let user = await this.usersRepository.findOne({ where: { id, deleted: false }, relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user'] });
+
     if (!user) throw new NotFoundException('User not found');
+
     user.update(dto, jwtDto.sub);
-    return this.usersRepository.save(user);
+
+    user = await this.usersRepository.save(user);
+
+    user = await this.usersRepository.findOne({ where: { id: user.id }, relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user'] });
+
+    return user?.toDto();
   }
 }

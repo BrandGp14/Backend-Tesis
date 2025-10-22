@@ -1,10 +1,11 @@
-import { Type } from 'class-transformer';
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
+import { plainToInstance, Transform, Type } from 'class-transformer';
+import { IsArray, IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
+import { InstitutionDepartmentDto } from './institution-department.dto';
 
 export class InstitutionDto {
 
-  @IsOptional()
   @IsString()
+  @IsOptional()
   id: string;
 
   @IsString()
@@ -39,8 +40,22 @@ export class InstitutionDto {
   @IsNotEmpty()
   domain: string;
 
-  @IsOptional()
   @IsBoolean()
+  @IsOptional()
   @Type(() => Boolean)
   enabled: boolean = true;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => InstitutionDepartmentDto)
+  @Transform(
+    ({ value }) => {
+      if (typeof value === 'string') {
+        const institutionDepartments = JSON.parse(value);
+        return plainToInstance(InstitutionDepartmentDto, institutionDepartments);
+      }
+    }
+  )
+  departments: InstitutionDepartmentDto[] = [];
 }
