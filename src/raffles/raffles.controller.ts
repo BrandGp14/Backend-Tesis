@@ -10,11 +10,11 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('raffles')
 @ApiBearerAuth()
-@UseGuards(JwtAuthService)
 export class RafflesController {
   constructor(private readonly rafflesService: RafflesService) { }
 
   @Get('/search')
+  @UseGuards(JwtAuthService)
   async search(
     @Query('page', new DefaultValuePipe(PageReference.PAGE), ParseIntPipe) page: number,
     @Query('size', new DefaultValuePipe(PageReference.SIZE), ParseIntPipe) size: number,
@@ -35,6 +35,7 @@ export class RafflesController {
   }
 
   @Post()
+  @UseGuards(JwtAuthService)
   @UseInterceptors(FilesInterceptor('files'))
   async create(@UploadedFiles() files: Express.Multer.File[], @Body() createRaffleDto: RaffleDto, @Req() req: { user: JwtDto }) {
     const raffle = await this.rafflesService.create(files, createRaffleDto, req.user);
@@ -42,6 +43,7 @@ export class RafflesController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthService)
   @UseInterceptors(FilesInterceptor('files'))
   async update(@Param('id') id: string, @UploadedFiles() files: Express.Multer.File[], @Body() updateRaffleDto: RaffleDto, @Req() req: { user: JwtDto }) {
     const raffle = await this.rafflesService.update(id, files, updateRaffleDto, req.user);
@@ -50,6 +52,7 @@ export class RafflesController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthService)
   async remove(@Param('id') id: string, @Req() req: { user: JwtDto }) {
     const raffle = await this.rafflesService.remove(id, req.user);
     if (!raffle) return ApiResponse.notFound('Raffle not found');

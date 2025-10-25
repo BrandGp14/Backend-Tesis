@@ -1,12 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index, CreateDateColumn, UpdateDateColumn, OneToMany, JoinColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Index, CreateDateColumn, UpdateDateColumn, OneToMany, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { RaffleDto } from '../dto/raffle.dto';
 import { UpdateRaffleDto } from '../dto/update-raffle.dto';
 import { RaffleImage } from './rafle-image.entity';
 import { Institution } from 'src/institutes/entities/institute.entity';
 import { User } from 'src/users/entities/user.entity';
 import { RaffleStatusReference } from '../type/raffle.status.reference';
-import { instanceToPlain } from 'class-transformer';
 import { InstitutionDepartment } from 'src/institutes/entities/institution-department.entity';
+import { Ticket } from './ticket.entity';
+import { RaffleSerie } from './raffle-serie.entity';
 
 @Entity('raffles')
 @Index(['id', 'winner', 'institution_id', 'institution_department_id', 'organizer_id'])
@@ -86,6 +87,9 @@ export class Raffle {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @OneToOne(() => RaffleSerie, (raffleSerie) => raffleSerie.raffle)
+  raffleSerie: RaffleSerie;
+
   @ManyToOne(() => Institution, (institution) => institution.raffles)
   @JoinColumn({ name: 'institution_id' })
   institution: Institution;
@@ -100,6 +104,9 @@ export class Raffle {
 
   @OneToMany(() => RaffleImage, (raffleImage) => raffleImage.raffle, { cascade: true })
   raffleImages: RaffleImage[];
+
+  @OneToMany(() => Ticket, (ticket) => ticket.raffle, { cascade: true })
+  tickets: Ticket[];
 
   static fromDto(raffleDto: RaffleDto, userId: string) {
     const raffle = new Raffle();
@@ -133,6 +140,8 @@ export class Raffle {
       ]
     }
 
+    raffle.raffleSerie = RaffleSerie.fromDto(raffleDto.available, userId);
+
     return raffle;
   }
 
@@ -140,6 +149,8 @@ export class Raffle {
     Object.assign(this, raffle);
 
     this.updatedBy = userId;
+
+    this.raffleImages = this.raffleImages.filter(r => r.id);
 
     this.raffleImages.forEach((raffleImage) => {
       const raffleImageOp = raffle.raffleImages?.find((raffleImageOp) => raffleImageOp.id === raffleImage.id);
@@ -187,7 +198,6 @@ export class Raffle {
     dto.organizerDescription = this.user.firstName + ' ' + this.user.lastName;
 
     if (this.raffleImages) dto.raffleImages = this.raffleImages?.map(ri => ri.toDto());
-
 
     return dto;
   }

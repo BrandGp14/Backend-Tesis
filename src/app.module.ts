@@ -33,4 +33,4 @@ import { DashboardModule } from './dashboard/dashboard.module';
   providers: [JwtService, DashboardService],
   controllers: [DashboardController],
 })
-export class AppModule {}
+export class AppModule { }

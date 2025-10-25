@@ -134,7 +134,7 @@ export class User {
     dto.last_login = this.last_login;
     dto.enabled = this.enabled;
 
-    dto.roles = this.userRoles.map(ur => ur.toDto());
+    if (this.userRoles) dto.roles = this.userRoles.map(ur => ur.toDto());
 
     return dto;
   }
