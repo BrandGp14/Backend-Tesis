@@ -4,4 +4,5 @@ export enum RaffleStatusReference {
     FINISHED = 30,
     CANCELLED = 40,
     CLOSED = 50,
+    PAUSED = 60,
 }

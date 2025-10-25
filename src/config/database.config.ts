@@ -8,7 +8,7 @@ export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOp
   entities: [path.resolve(__dirname, '..') + '/**/*.entity{.ts,.js}'],
   synchronize: true,
   ssl: { rejectUnauthorized: false },
-  logging: false,
+  logging: ['query', 'error'],
   extra: {
     max: 20,
     connectionTimeoutMillis: 2000,

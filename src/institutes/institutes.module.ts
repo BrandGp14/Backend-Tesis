@@ -9,6 +9,6 @@ import { UploadFileModule } from 'src/upload-file/upload-file.module';
   imports: [TypeOrmModule.forFeature([Institution]), UploadFileModule],
   providers: [InstitutesService],
   controllers: [InstitutesController],
-  exports: [],
+  exports: [TypeOrmModule],
 })
-export class InstitutesModule {}
+export class InstitutesModule { }

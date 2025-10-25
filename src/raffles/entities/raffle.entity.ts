@@ -26,6 +26,9 @@ export class Raffle {
   @Column({ nullable: false })
   currencySymbol: string;
 
+  @Column({ nullable: false })
+  awardDescription: string;
+
   @Column({ type: 'decimal', precision: 18, scale: 6, nullable: false })
   price: number;
 
@@ -36,7 +39,7 @@ export class Raffle {
   sold: number;
 
   @Column({ nullable: true })
-  maxPerUser: number;
+  assignedPerUser: number;
 
   @Column({ nullable: false })
   startDate: Date;
@@ -105,10 +108,11 @@ export class Raffle {
     raffle.description = raffleDto.description;
     raffle.currencyCode = raffleDto.currencyCode;
     raffle.currencySymbol = raffleDto.currencySymbol;
+    raffle.awardDescription = raffleDto.awardDescription;
     raffle.price = raffleDto.price;
     raffle.available = raffleDto.available;
     raffle.sold = raffleDto.sold;
-    raffle.maxPerUser = raffleDto.maxPerUser !== undefined ? raffleDto.maxPerUser : -1;
+    raffle.assignedPerUser = raffleDto.assignedPerUser !== undefined ? raffleDto.assignedPerUser : 1;
     raffle.startDate = raffleDto.startDate;
     raffle.endDate = raffleDto.endDate;
     raffle.winner = raffleDto.winner;
@@ -163,10 +167,11 @@ export class Raffle {
     dto.description = this.description;
     dto.currencyCode = this.currencyCode;
     dto.currencySymbol = this.currencySymbol;
+    dto.awardDescription = this.awardDescription;
     dto.price = this.price;
     dto.available = this.available;
     dto.sold = this.sold;
-    dto.maxPerUser = this.maxPerUser;
+    dto.assignedPerUser = this.assignedPerUser;
     dto.startDate = this.startDate;
     dto.endDate = this.endDate;
     dto.allowExternalParticipants = this.allowExternalParticipants;

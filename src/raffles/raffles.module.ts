@@ -9,6 +9,6 @@ import { UploadFileModule } from 'src/upload-file/upload-file.module';
   imports: [TypeOrmModule.forFeature([Raffle]), UploadFileModule],
   controllers: [RafflesController],
   providers: [RafflesService],
-  exports: [RafflesService],
+  exports: [TypeOrmModule],
 })
 export class RafflesModule { }

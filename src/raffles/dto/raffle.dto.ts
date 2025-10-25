@@ -34,6 +34,10 @@ export class RaffleDto {
   @IsNotEmpty()
   currencySymbol: string;
 
+  @IsString()
+  @IsNotEmpty()
+  awardDescription: string;
+
   @IsNumber()
   @IsNotEmpty()
   @Type(() => Number)
@@ -52,7 +56,7 @@ export class RaffleDto {
   @IsNumber()
   @IsNotEmpty()
   @Type(() => Number)
-  maxPerUser: number;
+  assignedPerUser: number;
 
   @IsDateString()
   @IsNotEmpty()

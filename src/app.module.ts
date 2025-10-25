@@ -8,6 +8,9 @@ import { InstitutesModule } from './institutes/institutes.module';
 import { UploadFileModule } from './upload-file/upload-file.module';
 import { JWTAuthModule } from './jwt-auth/jwt-auth.module';
 import { JwtService } from '@nestjs/jwt';
+import { DashboardController } from './dashboard/dashboard.controller';
+import { DashboardService } from './dashboard/dashboard.service';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -24,8 +27,10 @@ import { JwtService } from '@nestjs/jwt';
     InstitutesModule,
     UploadFileModule,
     JWTAuthModule,
+    DashboardModule,
   ],
   exports: [TypeOrmModule],
-  providers: [JwtService],
+  providers: [JwtService, DashboardService],
+  controllers: [DashboardController],
 })
 export class AppModule {}
