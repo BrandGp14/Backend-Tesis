@@ -16,7 +16,8 @@ export class RafflesService {
     private readonly uploadFileService: UploadFileService,
   ) { }
 
-  async search(page: number, size: number, enabled?: boolean, institution?: string, organizer?: string) {
+  async search(page: number, size: number, enabled?: boolean, institution?: string, organizer?: string, department?: string, endDate?: Date,
+    popularity?: boolean, title?: string) {
     const skip = (page - 1) * size;
 
     const query = this.raffleRepository.createQueryBuilder('raffle')
@@ -30,9 +31,14 @@ export class RafflesService {
     if (enabled !== undefined) query.andWhere('raffle.enabled = :enabled', { enabled });
     if (institution !== undefined) query.andWhere('institution.id = :institution', { institution });
     if (organizer !== undefined) query.andWhere('user.id = :organizer', { organizer });
+    if (department !== undefined) query.andWhere('department.id = :department', { department });
+    if (endDate !== undefined) query.andWhere('raffle.endDate <= :endDate', { endDate });
+    if (title !== undefined) query.andWhere('LOWER(raffle.title) LIKE %:title%', { 'title': title.toLowerCase() });
+
+    if (popularity !== undefined && popularity) query.orderBy('raffle.sold', 'DESC').addOrderBy('raffle.createdAt', 'DESC');
+    else query.orderBy('raffle.createdAt', 'DESC').addOrderBy('raffle.sold', 'DESC');
 
     const [raffles, totalElements] = await query
-      .orderBy('raffle.createdAt', 'DESC')
       .skip(skip)
       .take(size)
       .getManyAndCount();

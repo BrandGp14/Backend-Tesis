@@ -62,6 +62,7 @@ export class TicketsService {
             createTicketDto.ticketCode = raffle.raffleSerie.getCode();
             tickets.push(Ticket.fromDto(createTicketDto, jwtDto.sub));
             raffle.raffleSerie.update(jwtDto.sub);
+            raffle.sold += 1;
         }
 
         await this.raffleRepository.save(raffle);
@@ -82,6 +83,7 @@ export class TicketsService {
             createTicketDto.ticketCode = raffle.raffleSerie.getCode();
             tickets.push(Ticket.fromDto(createTicketDto, createTicketDto.documentNumber));
             raffle.raffleSerie.update(createTicketDto.documentNumber);
+            raffle.sold += 1;
         }
 
         await this.raffleRepository.save(raffle);

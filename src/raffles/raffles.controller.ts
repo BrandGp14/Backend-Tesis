@@ -21,8 +21,12 @@ export class RafflesController {
     @Query('enabled') enabled?: boolean,
     @Query('institution') institution?: string,
     @Query('organizer') organizer?: string,
+    @Query('department') department?: string,
+    @Query('endDate') endDate?: Date,
+    @Query('popularity') popularity?: boolean,
+    @Query('title') title?: string,
   ) {
-    const raffles = await this.rafflesService.search(page, size, enabled, institution, organizer);
+    const raffles = await this.rafflesService.search(page, size, enabled, institution, organizer, department, endDate, popularity, title);
 
     return ApiResponse.success(raffles);
   }
