@@ -1,7 +1,9 @@
-import { Column, CreateDateColumn, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Raffle } from "./raffle.entity";
 import { RaffleGiftImageDto } from "../dto/rafle-gift-image.dto";
 
+@Entity('raffle_gift_images')
+@Index(['id', 'raffle_id'])
 export class RaffleGiftImage {
     @PrimaryGeneratedColumn('uuid')
     id: string;
