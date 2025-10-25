@@ -12,6 +12,7 @@ import {
 import { RaffleStatusReference } from '../type/raffle.status.reference';
 import { RaffleImageDto } from './raffle-image.dto';
 import { plainToInstance, Transform, Type } from 'class-transformer';
+import { RaffleGiftImageDto } from './rafle-gift-image.dto';
 
 export class RaffleDto {
   @IsString()
@@ -131,4 +132,17 @@ export class RaffleDto {
     return value;
   })
   raffleImages: RaffleImageDto[] = [];
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => RaffleGiftImageDto)
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      const raffleGiftImages = JSON.parse(value);
+      return plainToInstance(RaffleGiftImageDto, raffleGiftImages);
+    }
+    return value;
+  })
+  raffleGiftImages: RaffleGiftImageDto[] = [];
 }

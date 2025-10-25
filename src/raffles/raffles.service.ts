@@ -24,6 +24,7 @@ export class RafflesService {
       .leftJoinAndSelect('raffle.user', 'user')
       .leftJoinAndSelect('raffle.institution', 'institution')
       .leftJoinAndSelect('raffle.department', 'department')
+      .leftJoinAndSelect('raffle.raffleGiftImages', 'raffleGiftImages', 'raffleGiftImages.deleted = false')
       .where('raffle.deleted = false');
 
     if (enabled !== undefined) query.andWhere('raffle.enabled = :enabled', { enabled });
@@ -55,7 +56,7 @@ export class RafflesService {
 
     const uploadFiles = await Promise.all(
       files.map(async (f) => {
-        const existInRaffleImages = dto.raffleImages.find(ri => ri.imageUrl === f.originalname);
+        const existInRaffleImages = dto.raffleImages.find(ri => ri.imageUrl === f.originalname) || dto.raffleGiftImages.find(ri => ri.imageUrl === f.originalname);
         if (!existInRaffleImages) return undefined;
         const url = await this.uploadFileService.uploadFile(f);
         return { fileName: f.originalname, fileUrl: url };
@@ -67,10 +68,15 @@ export class RafflesService {
       if (f && f.fileUrl) raffleImages.imageUrl = f.fileUrl;
     })
 
+    dto.raffleGiftImages.forEach((raffleGiftImages) => {
+      const f = uploadFiles.find(f => f?.fileName === raffleGiftImages.imageUrl);
+      if (f && f.fileUrl) raffleGiftImages.imageUrl = f.fileUrl;
+    })
+
     let raffle = Raffle.fromDto(dto, jwtDto.sub);
     raffle = await this.raffleRepository.save(raffle);
 
-    const raffleI = await this.raffleRepository.findOne({ where: { id: raffle.id }, relations: ['raffleImages', 'user', 'institution', 'department'] });
+    const raffleI = await this.raffleRepository.findOne({ where: { id: raffle.id }, relations: ['raffleImages', 'user', 'institution', 'department', 'raffleGiftImages'] });
 
     return raffleI?.toDto();
   }
@@ -79,14 +85,14 @@ export class RafflesService {
     let raffle = await this.raffleRepository.findOne(
       {
         where: { id, deleted: false, raffleImages: { deleted: false } },
-        relations: ['raffleImages', 'user', 'institution', 'department'],
+        relations: ['raffleImages', 'user', 'institution', 'department', 'raffleGiftImages'],
       }
     );
     if (!raffle) return undefined;
 
     const uploadFiles = await Promise.all(
       files.map(async (f) => {
-        const existInRaffleImages = dto.raffleImages.find(ri => ri.imageUrl === f.originalname);
+        const existInRaffleImages = dto.raffleImages.find(ri => ri.imageUrl === f.originalname) || dto.raffleGiftImages.find(ri => ri.imageUrl === f.originalname);
         if (!existInRaffleImages) return undefined;
         const url = await this.uploadFileService.uploadFile(f);
         return { fileName: f.filename, fileUrl: url };
@@ -96,6 +102,11 @@ export class RafflesService {
     dto.raffleImages.forEach((raffleImages) => {
       const f = uploadFiles.find(f => f?.fileName === raffleImages.imageUrl);
       if (f && f.fileUrl) raffleImages.imageUrl = f.fileUrl;
+    })
+
+    dto.raffleGiftImages.forEach((raffleGiftImages) => {
+      const f = uploadFiles.find(f => f?.fileName === raffleGiftImages.imageUrl);
+      if (f && f.fileUrl) raffleGiftImages.imageUrl = f.fileUrl;
     })
 
     raffle.update(dto, jwtDto.sub);

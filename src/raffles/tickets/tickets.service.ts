@@ -34,7 +34,7 @@ export class TicketsService {
         if (documentNumber !== undefined) query.andWhere('ticket.documentNumber = :documentNumber', { documentNumber });
 
         const [tickets, totalElements] = await query
-            .orderBy('ticket.ticketCode', 'DESC')
+            .orderBy('ticket.createdAt', 'DESC')
             .skip(skip)
             .take(size)
             .getManyAndCount();

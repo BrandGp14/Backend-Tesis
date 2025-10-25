@@ -8,6 +8,7 @@ import { RaffleStatusReference } from '../type/raffle.status.reference';
 import { InstitutionDepartment } from 'src/institutes/entities/institution-department.entity';
 import { Ticket } from './ticket.entity';
 import { RaffleSerie } from './raffle-serie.entity';
+import { RaffleGiftImage } from './rafle-gift-image.entity';
 
 @Entity('raffles')
 @Index(['id', 'winner', 'institution_id', 'institution_department_id', 'organizer_id'])
@@ -105,6 +106,9 @@ export class Raffle {
   @OneToMany(() => RaffleImage, (raffleImage) => raffleImage.raffle, { cascade: true })
   raffleImages: RaffleImage[];
 
+  @OneToMany(() => RaffleGiftImage, (raffleGiftImage) => raffleGiftImage.raffle, { cascade: true })
+  raffleGiftImages: RaffleGiftImage[];
+
   @OneToMany(() => Ticket, (ticket) => ticket.raffle, { cascade: true })
   tickets: Ticket[];
 
@@ -140,6 +144,12 @@ export class Raffle {
       ]
     }
 
+    if (raffleDto.raffleGiftImages.length > 0) {
+      raffle.raffleGiftImages = [
+        ...raffleDto.raffleGiftImages.map((raffleGiftImageDto) => RaffleGiftImage.fromDto(raffleGiftImageDto, userId))
+      ]
+    }
+
     raffle.raffleSerie = RaffleSerie.fromDto(raffleDto.available, userId);
 
     return raffle;
@@ -151,6 +161,7 @@ export class Raffle {
     this.updatedBy = userId;
 
     this.raffleImages = this.raffleImages.filter(r => r.id);
+    this.raffleGiftImages = this.raffleGiftImages.filter(r => r.id);
 
     this.raffleImages.forEach((raffleImage) => {
       const raffleImageOp = raffle.raffleImages?.find((raffleImageOp) => raffleImageOp.id === raffleImage.id);
@@ -160,6 +171,16 @@ export class Raffle {
     this.raffleImages = [
       ...this.raffleImages,
       ...raffle.raffleImages!.filter((raffleImage) => !raffleImage.id).map((raffleImage) => RaffleImage.fromDto(raffleImage, userId))
+    ]
+
+    this.raffleGiftImages.forEach((raffleGiftImage) => {
+      const raffleGiftImageOp = raffle.raffleGiftImages?.find((raffleGiftImageOp) => raffleGiftImageOp.id === raffleGiftImage.id);
+      if (!raffleGiftImageOp) raffleGiftImage.delete(userId);
+    })
+
+    this.raffleGiftImages = [
+      ...this.raffleGiftImages,
+      ...raffle.raffleGiftImages!.filter((raffleGiftImage) => !raffleGiftImage.id).map((raffleGiftImage) => RaffleGiftImage.fromDto(raffleGiftImage, userId))
     ]
   }
 
@@ -198,6 +219,7 @@ export class Raffle {
     dto.organizerDescription = this.user.firstName + ' ' + this.user.lastName;
 
     if (this.raffleImages) dto.raffleImages = this.raffleImages?.map(ri => ri.toDto());
+    if (this.raffleGiftImages) dto.raffleGiftImages = this.raffleGiftImages?.map(ri => ri.toDto());
 
     return dto;
   }
