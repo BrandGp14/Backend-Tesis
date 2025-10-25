@@ -80,7 +80,7 @@ export class TicketsService {
         let tickets: Ticket[] = [];
         for (let i = 0; i < purchaseTotal; i++) {
             createTicketDto.ticketCode = raffle.raffleSerie.getCode();
-            tickets.push(Ticket.fromDto(createTicketDto, ''));
+            tickets.push(Ticket.fromDto(createTicketDto, createTicketDto.documentNumber));
             raffle.raffleSerie.update(createTicketDto.documentNumber);
         }
 

@@ -57,7 +57,7 @@ export class RaffleSerie {
     }
 
     getCode() {
-        const afterLength = this.size - (this.prefix + this.correlative).length;
+        const afterLength = this.size.toFixed().length - (this.prefix + this.correlative).length;
         return this.prefix + (afterLength > 0 ? '0'.repeat(afterLength) : '') + this.correlative;
     }
 }
