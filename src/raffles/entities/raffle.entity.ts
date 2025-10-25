@@ -87,7 +87,7 @@ export class Raffle {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToOne(() => RaffleSerie, (raffleSerie) => raffleSerie.raffle)
+  @OneToOne(() => RaffleSerie, (raffleSerie) => raffleSerie.raffle, { cascade: true })
   raffleSerie: RaffleSerie;
 
   @ManyToOne(() => Institution, (institution) => institution.raffles)

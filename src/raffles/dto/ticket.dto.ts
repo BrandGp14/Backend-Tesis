@@ -21,6 +21,7 @@ export class TicketDto {
 
     @IsNumber()
     @IsNotEmpty()
+    @Type(() => Number)
     numberPhone: number;
 
     @IsString()
