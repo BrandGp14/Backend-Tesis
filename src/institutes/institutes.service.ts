@@ -59,13 +59,16 @@ export class InstitutesService {
     file: Express.Multer.File,
     updateInstituteDto: UpdateInstituteDto,
   ) {
-    let institute = await this.institutesRepository.findOne({ where: { id, deleted: false, departments: { deleted: false } }, relations: ['departments'] });
+    let institute = await this.institutesRepository.findOne({ where: { id, deleted: false}, relations: ['departments'] });
+
+    console.log(institute);
 
     if (!institute) return undefined;
 
-    const urlFile = await this.uploadFileService.uploadFile(file);
-
-    if (urlFile) institute.picture = urlFile;
+    if (file) {
+      const urlFile = await this.uploadFileService.uploadFile(file);
+      if (urlFile) institute.picture = urlFile;
+    }
 
     institute.update(updateInstituteDto, id);
 

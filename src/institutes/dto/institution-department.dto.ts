@@ -7,10 +7,6 @@ export class InstitutionDepartmentDto {
     id: string;
 
     @IsString()
-    @IsOptional()
-    department_id: string;
-
-    @IsString()
     @IsNotEmpty()
     departmentCode: string;
 

@@ -96,6 +96,8 @@ export class Institution {
     Object.assign(this, institute);
     this.updatedBy = userId;
 
+    this.departments = this.departments.filter(d => d.id);
+
     this.departments.forEach((department) => {
       const departmentOp = institute.departments?.find((departmentOp) => departmentOp.id === department.id);
       if (departmentOp) department.update(departmentOp, userId);
@@ -128,6 +130,8 @@ export class Institution {
     dto.website = this.website;
     dto.domain = this.domain;
     dto.enabled = this.enabled;
+
+    if (this.departments) dto.departments = this.departments.map(d => d.toDto());
     return dto;
   }
 }
