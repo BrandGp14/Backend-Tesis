@@ -11,6 +11,7 @@ import { UpdateInstituteDto } from '../dto/update-institute.dto';
 import { InstitutionDto } from '../dto/institution.dto';
 import { Raffle } from 'src/raffles/entities/raffle.entity';
 import { InstitutionDepartment } from './institution-department.entity';
+import { InstituteConfiguration } from './institute-configuration.entity';
 
 @Entity('institutions')
 @Index('UQ_INSTITUTION_DOMAIN_UNIQUE_ON_DELETED_FALSE', ['domain'], { unique: true, where: '"deleted" = false' })
@@ -71,6 +72,9 @@ export class Institution {
   @OneToMany(() => InstitutionDepartment, (institutionDepartment) => institutionDepartment.institution, { cascade: true })
   departments: InstitutionDepartment[];
 
+  @OneToMany(() => InstituteConfiguration, (institutionConfiguration) => institutionConfiguration.institution, { cascade: true })
+  configurations: InstituteConfiguration[];
+
   static fromDto(instituteDto: InstitutionDto, userId: string) {
     const institute = new Institution();
     institute.description = instituteDto.description;
@@ -89,6 +93,13 @@ export class Institution {
         ...instituteDto.departments.map((institutionDepartmentDto) => InstitutionDepartment.fromDto(institutionDepartmentDto, userId))
       ]
     }
+
+    if (instituteDto.configurations.length > 0) {
+      institute.configurations = [
+        ...instituteDto.configurations.map((institutionConfigurationDto) => InstituteConfiguration.fromDto(institutionConfigurationDto, userId))
+      ]
+    }
+
     return institute;
   }
 
@@ -97,6 +108,7 @@ export class Institution {
     this.updatedBy = userId;
 
     this.departments = this.departments.filter(d => d.id);
+    this.configurations = this.configurations.filter(d => d.id);
 
     this.departments.forEach((department) => {
       const departmentOp = institute.departments?.find((departmentOp) => departmentOp.id === department.id);
@@ -105,8 +117,19 @@ export class Institution {
     })
 
     this.departments = [
-      ...this.departments,
+      ...this.departments.filter(d => !d.deleted),
       ...institute.departments!.filter((department) => !department.id).map((department) => InstitutionDepartment.fromDto(department, userId))
+    ]
+
+    this.configurations.forEach((configuration) => {
+      const configurationOp = institute.configurations?.find((configurationOp) => configurationOp.id === configuration.id);
+      if (configurationOp) configuration.update(configurationOp, userId);
+      else configuration.delete(userId);
+    })
+
+    this.configurations = [
+      ...this.configurations.filter(d => !d.deleted),
+      ...institute.configurations!.filter((configuration) => !configuration.id).map((configuration) => InstituteConfiguration.fromDto(configuration, userId))
     ]
   }
 
@@ -116,6 +139,7 @@ export class Institution {
     this.updatedBy = userId;
 
     this.departments.forEach((department) => { department.delete(userId); })
+    this.configurations.forEach((configuration) => { configuration.delete(userId); })
   }
 
   toDto(): InstitutionDto {
@@ -132,6 +156,8 @@ export class Institution {
     dto.enabled = this.enabled;
 
     if (this.departments) dto.departments = this.departments.map(d => d.toDto());
+    if (this.configurations) dto.configurations = this.configurations.map(d => d.toDto());
+
     return dto;
   }
 }
