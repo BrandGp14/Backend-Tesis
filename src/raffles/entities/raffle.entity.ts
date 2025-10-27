@@ -9,6 +9,7 @@ import { InstitutionDepartment } from 'src/institutes/entities/institution-depar
 import { Ticket } from './ticket.entity';
 import { RaffleSerie } from './raffle-serie.entity';
 import { RaffleGiftImage } from './rafle-gift-image.entity';
+import { Payment } from 'src/payment/entity/payment.entity';
 
 @Entity('raffles')
 @Index(['id', 'winner', 'institution_id', 'institution_department_id', 'organizer_id'])
@@ -111,6 +112,9 @@ export class Raffle {
 
   @OneToMany(() => Ticket, (ticket) => ticket.raffle, { cascade: true })
   tickets: Ticket[];
+
+  @OneToMany(() => Payment, (payment) => payment.raffle)
+  payments: Payment[];
 
   static fromDto(raffleDto: RaffleDto, userId: string) {
     const raffle = new Raffle();

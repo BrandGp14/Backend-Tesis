@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Raffle } from "./raffle.entity";
 import { TicketDto } from "../dto/ticket.dto";
+import { PaymentTicket } from "src/payment/entity/payment-ticket.entity";
 
 @Entity('tickets')
 @Index(['id', 'raffleId', 'ticketCode', 'purchaseDate'])
@@ -56,6 +57,9 @@ export class Ticket {
 
     @ManyToOne(() => Raffle, (raffle) => raffle.tickets)
     raffle: Raffle;
+
+    @OneToMany(() => PaymentTicket, (paymentTicket) => paymentTicket.ticket)
+    paymentTickets: PaymentTicket[];
 
     static fromDto(ticketDto: TicketDto, userId: string) {
         const ticket = new Ticket();

@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { DashboardController } from './dashboard/dashboard.controller';
 import { DashboardService } from './dashboard/dashboard.service';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     UploadFileModule,
     JWTAuthModule,
     DashboardModule,
+    PaymentModule,
   ],
   exports: [TypeOrmModule],
   providers: [JwtService, DashboardService],

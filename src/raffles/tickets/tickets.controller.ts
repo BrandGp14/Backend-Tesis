@@ -35,18 +35,18 @@ export class TicketsController {
         return ApiResponse.success(ticket);
     }
 
-    @Post('/create')
-    @UseGuards(JwtAuthService)
-    async create(@Body() createTicketDto: TicketDto, @Req() req: { user: JwtDto }) {
-        const tickets = await this.ticketsService.createWhenLoggedUser(createTicketDto, req.user);
-        if (!tickets) return ApiResponse.notFound('Raffle not found');
-        return ApiResponse.success(tickets);
-    }
+    // @Post('/create')
+    // @UseGuards(JwtAuthService)
+    // async create(@Body() createTicketDto: TicketDto, @Req() req: { user: JwtDto }) {
+    //     const tickets = await this.ticketsService.createWhenLoggedUser(createTicketDto, req.user);
+    //     if (!tickets) return ApiResponse.notFound('Raffle not found');
+    //     return ApiResponse.success(tickets);
+    // }
 
-    @Post('/create/anonymous')
-    async createAnonymous(@Body() createTicketDto: TicketDto) {
-        const tickets = await this.ticketsService.createWhenIsNotLoggedUser(createTicketDto);
-        if (!tickets) return ApiResponse.notFound('Raffle not found');
-        return ApiResponse.success(tickets);
-    }
+    // @Post('/create/anonymous')
+    // async createAnonymous(@Body() createTicketDto: TicketDto) {
+    //     const tickets = await this.ticketsService.createWhenIsNotLoggedUser(createTicketDto);
+    //     if (!tickets) return ApiResponse.notFound('Raffle not found');
+    //     return ApiResponse.success(tickets);
+    // }
 }
