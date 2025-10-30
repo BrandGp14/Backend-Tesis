@@ -4,6 +4,7 @@ import { Institution } from 'src/institutes/entities/institute.entity';
 import { Raffle } from 'src/raffles/entities/raffle.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
+import { CommonDashboardDto, CommonResultDashboardDto } from './dto/common-dashboard.dto';
 
 @Injectable()
 export class DashboardService {
@@ -21,20 +22,36 @@ export class DashboardService {
         return await this.institutesRepository.count({ where: { deleted: false } });
     }
 
-    async totalOrganizerEnabled() {
-        const result = await this.usersRepository.createQueryBuilder('user')
+    async totalOrganizerByInstitutionEnabled(institution: string) {
+
+        if (!institution) return undefined;
+
+        const { total } = await this.usersRepository.createQueryBuilder('user')
             .select('COUNT(DISTINCT(user.id))', 'total')
-            .leftJoinAndSelect('user.userRoles', 'userRole')
-            .leftJoinAndSelect('userRole.role', 'role')
+            .leftJoin('user.userRoles', 'userRole')
+            .leftJoin('userRole.role', 'role')
             .where('user.deleted = false')
             .andWhere('user.enabled = true')
             .andWhere('LOWER(role.code) = :role', { role: 'organizer' })
-            .groupBy('user.id')
-            .addGroupBy('userRole.id')
-            .addGroupBy('role.id')
-            .getOne();
-        console.log(result);
-        return result;
+            .andWhere('userRole.institution.id = :institution', { institution })
+            .getRawOne();
+
+        const { versus } = await this.usersRepository.createQueryBuilder('user')
+            .select('COUNT(DISTINCT(user.id))', 'versus')
+            .leftJoin('user.userRoles', 'userRole')
+            .leftJoin('userRole.role', 'role')
+            .where('user.deleted = false')
+            .andWhere('LOWER(role.code) = :role', { role: 'organizer' })
+            .andWhere('userRole.institution.id = :institution', { institution })
+            .getRawOne();
+
+        const commonDashboard = new CommonDashboardDto();
+        const result = new CommonResultDashboardDto();
+        result.total = Number(total ?? 0);
+        result.versus = Number(versus ?? 0);
+        commonDashboard.result.push(result);
+
+        return commonDashboard;
     }
 
     async totalRaffles() {
