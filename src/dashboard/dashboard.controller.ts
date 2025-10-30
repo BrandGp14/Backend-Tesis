@@ -15,10 +15,24 @@ export class DashboardController {
         return ApiResponse.success(totalInstitutes);
     }
 
-    @Get('total/organizer/enabled')
+    @Get('total/organizer/enabled/by/institution')
     async totalOrganizerEnabled(@Headers('institution') institution: string) {
         const totalOrganizerEnabled = await this.dashboardService.totalOrganizerByInstitutionEnabled(institution);
         if (!totalOrganizerEnabled) return ApiResponse.notFound('Institution Required');
         return ApiResponse.success(totalOrganizerEnabled);
+    }
+
+    @Get('total/raffles/active/by/institution')
+    async totalRafflesActive(@Headers('institution') institution: string) {
+        const totalRafflesActive = await this.dashboardService.totalRafflesByInstitutionActive(institution);
+        if (!totalRafflesActive) return ApiResponse.notFound('Institution Required');
+        return ApiResponse.success(totalRafflesActive);
+    }
+
+    @Get('total/users/by/institution/role/student')
+    async totalUsersByInstitutionRoleStudent(@Headers('institution') institution: string) {
+        const totalUsersByInstitutionRoleStudent = await this.dashboardService.totalUsersByInstitutionRoleStudent(institution);
+        if (!totalUsersByInstitutionRoleStudent) return ApiResponse.notFound('Institution Required');
+        return ApiResponse.success(totalUsersByInstitutionRoleStudent);
     }
 }
