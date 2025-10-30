@@ -32,7 +32,11 @@ export class InstitutesService {
   }
 
   async findOne(id: string): Promise<InstitutionDto | undefined> {
-    const institute = await this.institutesRepository.findOne({ where: { id, deleted: false, departments: { deleted: false } }, relations: ['departments'] });
+    const institute = await this.institutesRepository.createQueryBuilder('institute')
+      .leftJoinAndSelect('institute.departments', 'department', 'department.deleted = false')
+      .where('institute.id = :id', { id })
+      .andWhere('institute.deleted = false')
+      .getOne();
     return institute?.toDto();
   }
 
@@ -59,9 +63,7 @@ export class InstitutesService {
     file: Express.Multer.File,
     updateInstituteDto: UpdateInstituteDto,
   ) {
-    let institute = await this.institutesRepository.findOne({ where: { id, deleted: false}, relations: ['departments'] });
-
-    console.log(institute);
+    let institute = await this.institutesRepository.findOne({ where: { id, deleted: false }, relations: ['departments'] });
 
     if (!institute) return undefined;
 
