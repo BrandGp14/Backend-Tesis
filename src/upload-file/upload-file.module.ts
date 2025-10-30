@@ -7,7 +7,7 @@ import { UploadFileController } from './upload-file.controller';
 @Module({
   imports: [ConfigModule, HttpModule],
   providers: [UploadFileService],
-  exports: [UploadFileService],
   controllers: [UploadFileController],
+  exports: [UploadFileService],
 })
-export class UploadFileModule {}
+export class UploadFileModule { }

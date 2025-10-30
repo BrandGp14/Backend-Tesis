@@ -7,11 +7,13 @@ import { UploadFileModule } from 'src/upload-file/upload-file.module';
 import { TicketsController } from './tickets/tickets.controller';
 import { TicketsService } from './tickets/tickets.service';
 import { Ticket } from './entities/ticket.entity';
+import { EntitiesModuleModule } from 'src/entities-module/entities-module.module';
+import { UploadFileService } from 'src/upload-file/upload-file.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Raffle, Ticket]), UploadFileModule],
+  imports: [EntitiesModuleModule, UploadFileModule],
   controllers: [RafflesController, TicketsController],
   providers: [RafflesService, TicketsService],
-  exports: [TypeOrmModule],
+  exports: [],
 })
 export class RafflesModule { }

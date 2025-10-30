@@ -15,9 +15,9 @@ export class DashboardController {
         return ApiResponse.success(totalInstitutes);
     }
 
-    @Get('total/raffles')
-    async totalRaffles() {
-        const totalRaffles = await this.dashboardService.totalRaffles();
-        return ApiResponse.success(totalRaffles);
+    @Get('total/organizer/enabled')
+    async totalOrganizerEnabled() {
+        const totalOrganizerEnabled = await this.dashboardService.totalOrganizerEnabled();
+        return ApiResponse.success(totalOrganizerEnabled);
     }
 }

@@ -80,14 +80,17 @@ export class UserRole {
 
   toDto(): UserRoleDto {
     const dto = new UserRoleDto();
+    console.log(this);
     dto.id = this.id;
     dto.user_id = this.user_id;
-    dto.userDescription = this.user.firstName + ' ' + this.user.lastName;
     dto.role_id = this.role_id;
     dto.roleDescription = this.role.description;
     dto.institution_id = this.institution_id;
     dto.institutionDescription = this.institution.description;
     dto.enabled = this.enabled;
+
+    if (this.user) dto.userDescription = this.user.firstName + ' ' + this.user.lastName;
+
     return dto;
   }
 }

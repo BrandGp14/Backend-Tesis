@@ -12,6 +12,7 @@ import { DashboardController } from './dashboard/dashboard.controller';
 import { DashboardService } from './dashboard/dashboard.service';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PaymentModule } from './payment/payment.module';
+import { EntitiesModuleModule } from './entities-module/entities-module.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PaymentModule } from './payment/payment.module';
     JWTAuthModule,
     DashboardModule,
     PaymentModule,
+    EntitiesModuleModule,
   ],
   exports: [TypeOrmModule],
   providers: [JwtService, DashboardService],

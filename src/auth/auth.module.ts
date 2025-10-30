@@ -3,12 +3,11 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { GoogleStrategy } from './strategies/google.strategy';
-import { UsersModule } from 'src/users/users.module';
-import { RolesModule } from 'src/roles/roles.module';
 import { JWTAuthModule } from 'src/jwt-auth/jwt-auth.module';
+import { EntitiesModuleModule } from 'src/entities-module/entities-module.module';
 
 @Module({
-  imports: [PassportModule, UsersModule, RolesModule, JWTAuthModule],
+  imports: [PassportModule, JWTAuthModule, EntitiesModuleModule],
   providers: [AuthService, GoogleStrategy],
   controllers: [AuthController],
 })

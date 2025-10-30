@@ -4,11 +4,12 @@ import { InstitutesController } from './institutes.controller';
 import { Institution } from './entities/institute.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UploadFileModule } from 'src/upload-file/upload-file.module';
+import { EntitiesModuleModule } from 'src/entities-module/entities-module.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Institution]), UploadFileModule],
+  imports: [EntitiesModuleModule, UploadFileModule],
   providers: [InstitutesService],
   controllers: [InstitutesController],
-  exports: [TypeOrmModule],
+  exports: [],
 })
 export class InstitutesModule { }
