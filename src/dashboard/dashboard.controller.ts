@@ -35,4 +35,32 @@ export class DashboardController {
         if (!totalUsersByInstitutionRoleStudent) return ApiResponse.notFound('Institution Required');
         return ApiResponse.success(totalUsersByInstitutionRoleStudent);
     }
+
+    @Get('total/payments/by/actual/month/and/institution')
+    async totalPaymentsByActualMonthAndInstitution(@Headers('institution') institution: string) {
+        const totalPaymentsByActualMonthAndInstitution = await this.dashboardService.totalPaymentsByActualMonthAndInstitution(institution);
+        if (!totalPaymentsByActualMonthAndInstitution) return ApiResponse.notFound('Institution Required');
+        return ApiResponse.success(totalPaymentsByActualMonthAndInstitution);
+    }
+
+    @Get('total/sales/by/department/and/institution')
+    async getTotalSalesByDepartmentAndInstitution(@Headers('institution') institution: string) {
+        const totalSalesByDepartmentAndInstitution = await this.dashboardService.getTotalSalesByDepartmentAndInstitution(institution);
+        if (!totalSalesByDepartmentAndInstitution) return ApiResponse.notFound('Institution Required');
+        return ApiResponse.success(totalSalesByDepartmentAndInstitution);
+    }
+
+    @Get('top/five/raffles/by/institution')
+    async getTopFiveRafflesByInstitution(@Headers('institution') institution: string) {
+        const topFiveRafflesByInstitution = await this.dashboardService.getTopFiveRafflesByInstitution(institution);
+        if (!topFiveRafflesByInstitution) return ApiResponse.notFound('Institution Required');
+        return ApiResponse.success(topFiveRafflesByInstitution);
+    }
+
+    @Get('raffles/expire/in/next/7/days/by/institution')
+    async getRafflesExpireInNext7DaysByInstitution(@Headers('institution') institution: string) {
+        const rafflesExpireInNext7DaysByInstitution = await this.dashboardService.getRafflesExpireInNext7Days(institution);
+        if (!rafflesExpireInNext7DaysByInstitution) return ApiResponse.notFound('Institution Required');
+        return ApiResponse.success(rafflesExpireInNext7DaysByInstitution);
+    }
 }

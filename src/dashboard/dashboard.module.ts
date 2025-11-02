@@ -1,15 +1,12 @@
 import { Module } from '@nestjs/common';
 import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
-import { Institution } from 'src/institutes/entities/institute.entity';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Raffle } from 'src/raffles/entities/raffle.entity';
-import { User } from 'src/users/entities/user.entity';
+import { EntitiesModuleModule } from 'src/entities-module/entities-module.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Institution, Raffle, User])],
+  imports: [EntitiesModuleModule],
   controllers: [DashboardController],
   providers: [DashboardService],
-  exports: [TypeOrmModule],
+  exports: [],
 })
 export class DashboardModule { }
