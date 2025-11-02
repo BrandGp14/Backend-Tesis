@@ -11,6 +11,6 @@ export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOp
   logging: ['query', 'error'],
   extra: {
     max: 20,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000, // Aumentado de 2 a 10 segundos
   },
 });
