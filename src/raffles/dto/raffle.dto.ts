@@ -13,6 +13,7 @@ import { RaffleStatusReference } from '../type/raffle.status.reference';
 import { RaffleImageDto } from './raffle-image.dto';
 import { plainToInstance, Transform, Type } from 'class-transformer';
 import { RaffleGiftImageDto } from './rafle-gift-image.dto';
+import { TicketDto } from './ticket.dto';
 
 export class RaffleDto {
   @IsString()
@@ -145,4 +146,8 @@ export class RaffleDto {
     return value;
   })
   raffleGiftImages: RaffleGiftImageDto[] = [];
+
+  @IsArray()
+  @IsOptional()
+  tickets: TicketDto[] = [];
 }

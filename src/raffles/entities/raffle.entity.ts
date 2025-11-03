@@ -224,6 +224,7 @@ export class Raffle {
 
     if (this.raffleImages) dto.raffleImages = this.raffleImages?.map(ri => ri.toDto());
     if (this.raffleGiftImages) dto.raffleGiftImages = this.raffleGiftImages?.map(ri => ri.toDto());
+    if (this.tickets) dto.tickets = this.tickets?.map(t => t.toDto());
 
     return dto;
   }

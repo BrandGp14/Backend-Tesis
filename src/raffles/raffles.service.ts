@@ -138,4 +138,16 @@ export class RafflesService {
     raffle = await this.raffleRepository.save(raffle);
     return raffle?.id
   }
+
+  async searchMe(jwtDto: JwtDto) {
+    const raffles = await this.raffleRepository.createQueryBuilder('raffle')
+      .leftJoin('raffle.raffleImages', 'raffleImages', 'raffleImages.deleted = false')
+      .leftJoin('raffle.institution', 'institution')
+      .leftJoin('raffle.department', 'department')
+      .leftJoin('raffle.tickets', 'tickets', 'tickets.deleted = false AND tickets.email = :email', { email: jwtDto.email })
+      .where('raffle.deleted = false')
+      .getMany();
+
+    return raffles?.map(r => r.toDto());
+  }
 }

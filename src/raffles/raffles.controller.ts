@@ -62,4 +62,11 @@ export class RafflesController {
     if (!raffle) return ApiResponse.notFound('Raffle not found');
     return ApiResponse.deleted()
   }
+
+  @Get('search/me')
+  @UseGuards(JwtAuthService)
+  async searchMe(@Req() req: { user: JwtDto }) {
+    const raffles = await this.rafflesService.searchMe(req.user);
+    return ApiResponse.success(raffles);
+  }
 }
