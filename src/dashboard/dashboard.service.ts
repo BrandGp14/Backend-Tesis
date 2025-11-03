@@ -218,7 +218,10 @@ export class DashboardService {
         if (!institution) return undefined;
 
         const now = new Date();
-        const nextSevenDays = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
+        now.setHours(0, 0, 0);
+        const nextSevenDays = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        nextSevenDays.setDate(nextSevenDays.getDate() + 7);
+        nextSevenDays.setHours(23, 59, 59);
 
         const result = await this.rafflesRepository.createQueryBuilder('raffle')
             .select('raffle.title', 'title')
