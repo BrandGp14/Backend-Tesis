@@ -16,7 +16,7 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: 'http://localhost:3001',
+    origin: ['http://localhost:3001', 'https://www.wasirifa.digital'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'institution'],
