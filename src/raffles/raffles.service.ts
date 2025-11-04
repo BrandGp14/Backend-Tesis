@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Raffle } from './entities/raffle.entity';
@@ -7,12 +7,21 @@ import { UpdateRaffleDto } from './dto/update-raffle.dto';
 import { PagedResponse } from 'src/common/dto/paged.response.dto';
 import { JwtDto } from 'src/jwt-auth/dto/jwt.dto';
 import { UploadFileService } from 'src/upload-file/upload-file.service';
+import { Institution } from 'src/institutes/entities/institute.entity';
+import { InstitutionDepartment } from 'src/institutes/entities/institution-department.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class RafflesService {
   constructor(
     @InjectRepository(Raffle)
     private readonly raffleRepository: Repository<Raffle>,
+    @InjectRepository(Institution)
+    private readonly institutionRepository: Repository<Institution>,
+    @InjectRepository(InstitutionDepartment)
+    private readonly departmentRepository: Repository<InstitutionDepartment>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly uploadFileService: UploadFileService,
   ) { }
 
@@ -59,6 +68,27 @@ export class RafflesService {
   }
 
   async create(files: Express.Multer.File[], dto: RaffleDto, jwtDto: JwtDto) {
+    // Validar que las foreign keys existan antes de crear la rifa
+    const institution = await this.institutionRepository.findOne({
+      where: { id: dto.institution_id }
+    });
+    if (!institution) {
+      throw new BadRequestException(`Institución con ID ${dto.institution_id} no existe`);
+    }
+
+    const department = await this.departmentRepository.findOne({
+      where: { id: dto.institution_department_id, institution: { id: dto.institution_id } }
+    });
+    if (!department) {
+      throw new BadRequestException(`Departamento con ID ${dto.institution_department_id} no existe en la institución`);
+    }
+
+    const organizer = await this.userRepository.findOne({
+      where: { id: dto.organizer_id, deleted: false }
+    });
+    if (!organizer) {
+      throw new BadRequestException(`Usuario organizador con ID ${dto.organizer_id} no existe`);
+    }
 
     const uploadFiles = await Promise.all(
       files.map(async (f) => {
