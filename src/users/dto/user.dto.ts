@@ -26,7 +26,7 @@ export class UserDto {
 
   @IsString()
   @IsOptional()
-  student_code: string;
+  student_code?: string;
 
   @IsString()
   @IsOptional()

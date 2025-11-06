@@ -31,7 +31,7 @@ export class User {
   lastName: string;
 
   @Column({ nullable: true })
-  student_code: string;
+  student_code?: string;
 
   @Column({ nullable: true })
   document_number: string;
@@ -44,6 +44,9 @@ export class User {
 
   @Column({ nullable: true })
   profile_photo_url?: string;
+
+  @Column({ nullable: true })
+  password?: string;
 
   @Column({ nullable: false })
   last_login: Date = new Date();
@@ -126,7 +129,7 @@ export class User {
     dto.email = this.email;
     dto.firstName = this.firstName;
     dto.lastName = this.lastName;
-    dto.student_code = this.student_code;
+    dto.student_code = this.student_code || undefined;
     dto.document_number = this.document_number;
     dto.document_type = this.document_type;
     dto.phone = this.phone;

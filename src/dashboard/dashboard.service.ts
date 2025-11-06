@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { CommonDashboardDto, CommonResultDashboardDto } from './dto/common-dashboard.dto';
 import { RaffleStatusReference } from 'src/raffles/type/raffle.status.reference';
 import { Payment } from 'src/payment/entity/payment.entity';
+import { SuperAdminStatsDto } from './dto/superadmin-stats.dto';
 
 @Injectable()
 export class DashboardService {
@@ -243,4 +244,69 @@ export class DashboardService {
     }
 
     // Dashboard by institution End
+
+    async getSuperAdminStats(): Promise<SuperAdminStatsDto> {
+        // Total de instituciones
+        const totalInstitutions = await this.institutesRepository.count({
+            where: { deleted: false }
+        });
+
+        // Instituciones activas
+        const activeInstitutions = await this.institutesRepository.count({
+            where: { deleted: false, enabled: true }
+        });
+
+        // Total de administradores (ADMIN + ADMINSUPREMO)
+        const { totalAdmins } = await this.usersRepository.createQueryBuilder('user')
+            .select('COUNT(DISTINCT(user.id))', 'totalAdmins')
+            .leftJoin('user.userRoles', 'userRole')
+            .leftJoin('userRole.role', 'role')
+            .where('user.deleted = false')
+            .andWhere('user.enabled = true')
+            .andWhere('role.code IN (:...roles)', { roles: ['ADMIN', 'ADMINSUPREMO'] })
+            .getRawOne();
+
+        // Total de usuarios
+        const totalUsers = await this.usersRepository.count({
+            where: { deleted: false }
+        });
+
+        // Cálculo de crecimiento (usuarios creados en el último mes vs mes anterior)
+        const now = new Date();
+        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+        const { currentMonthUsers } = await this.usersRepository.createQueryBuilder('user')
+            .select('COUNT(user.id)', 'currentMonthUsers')
+            .where('user.deleted = false')
+            .andWhere('user.createdAt >= :currentMonthStart', { currentMonthStart })
+            .getRawOne();
+
+        const { lastMonthUsers } = await this.usersRepository.createQueryBuilder('user')
+            .select('COUNT(user.id)', 'lastMonthUsers')
+            .where('user.deleted = false')
+            .andWhere('user.createdAt >= :lastMonthStart', { lastMonthStart })
+            .andWhere('user.createdAt <= :lastMonthEnd', { lastMonthEnd })
+            .getRawOne();
+
+        // Calcular porcentaje de crecimiento
+        const currentMonthCount = Number(currentMonthUsers || 0);
+        const lastMonthCount = Number(lastMonthUsers || 0);
+        let growthPercentage = 0;
+        
+        if (lastMonthCount > 0) {
+            growthPercentage = Math.round(((currentMonthCount - lastMonthCount) / lastMonthCount) * 100);
+        } else if (currentMonthCount > 0) {
+            growthPercentage = 100; // 100% si no había usuarios el mes pasado pero hay ahora
+        }
+
+        return {
+            totalInstitutions,
+            activeInstitutions,
+            totalAdmins: Number(totalAdmins || 0),
+            totalUsers,
+            growthPercentage
+        };
+    }
 }

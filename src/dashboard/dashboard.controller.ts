@@ -1,10 +1,15 @@
 import { Controller, Get, Headers, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthService } from 'src/jwt-auth/jwt-auth.service';
 import { DashboardService } from './dashboard.service';
 import { ApiResponse } from 'src/common/dto/api.response.dto';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('dashboard')
-@UseGuards(JwtAuthService)
+@ApiTags('Dashboard')
+@UseGuards(JwtAuthService, RolesGuard)
+@ApiBearerAuth()
 export class DashboardController {
 
     constructor(private readonly dashboardService: DashboardService) { }
@@ -62,5 +67,20 @@ export class DashboardController {
         const rafflesExpireInNext7DaysByInstitution = await this.dashboardService.getRafflesExpireInNext7Days(institution);
         if (!rafflesExpireInNext7DaysByInstitution) return ApiResponse.notFound('Institution Required');
         return ApiResponse.success(rafflesExpireInNext7DaysByInstitution);
+    }
+
+    @Get('superadmin/stats')
+    @ApiOperation({ 
+        summary: 'Obtiene estadísticas generales del sistema para SuperAdmin',
+        description: 'Endpoint exclusivo para usuarios con rol ADMINSUPREMO' 
+    })
+    @Roles('ADMINSUPREMO')
+    async getSuperAdminStats() {
+        try {
+            const stats = await this.dashboardService.getSuperAdminStats();
+            return ApiResponse.success(stats);
+        } catch (error) {
+            return ApiResponse.error(error.message, 500);
+        }
     }
 }

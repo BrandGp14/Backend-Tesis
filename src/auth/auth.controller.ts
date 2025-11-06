@@ -1,19 +1,80 @@
-import { Controller, Get, Req, UseGuards, Res } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards, Res, Post, Body } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import type { Session } from 'src/users/dto/user-google.dto';
+import { EmailLoginDto } from './dto/email-login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { RegisterAdminDto } from './dto/register-admin.dto';
+import { RegisterInstitutionalAdminDto } from './dto/register-institutional-admin.dto';
+import { ApiResponse } from 'src/common/dto/api.response.dto';
 
 @Controller('auth')
+@ApiTags('Authentication')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('login')
+  @ApiOperation({ summary: 'Autenticación con Email y contraseña' })
+  @ApiBody({ type: EmailLoginDto })
+  async loginWithEmail(@Body() loginDto: EmailLoginDto) {
+    try {
+      const result = await this.authService.validateEmailLogin(loginDto);
+      return ApiResponse.success(result);
+    } catch (error) {
+      return ApiResponse.error(error.message, 401);
+    }
+  }
+
+  @Post('register')
+  @ApiOperation({ summary: 'Registro de nuevo usuario (estudiante)' })
+  @ApiBody({ type: RegisterDto })
+  async register(@Body() registerDto: RegisterDto) {
+    try {
+      const result = await this.authService.register(registerDto);
+      return ApiResponse.success(result);
+    } catch (error) {
+      return ApiResponse.error(error.message, 400);
+    }
+  }
+
+  @Post('register-admin')
+  @ApiOperation({ 
+    summary: 'Registro de administrador supremo',
+    description: 'Endpoint especial para crear usuarios con rol ADMINSUPREMO. Requiere clave secreta.' 
+  })
+  @ApiBody({ type: RegisterAdminDto })
+  async registerAdmin(@Body() registerAdminDto: RegisterAdminDto) {
+    try {
+      const result = await this.authService.registerAdmin(registerAdminDto);
+      return ApiResponse.success(result);
+    } catch (error) {
+      return ApiResponse.error(error.message, 400);
+    }
+  }
+
+  @Post('register-institutional-admin')
+  @ApiOperation({ 
+    summary: 'Registro de administrador institucional',
+    description: 'Endpoint para crear usuarios con rol ADMIN en instituciones específicas.' 
+  })
+  @ApiBody({ type: RegisterInstitutionalAdminDto })
+  async registerInstitutionalAdmin(@Body() registerDto: RegisterInstitutionalAdminDto) {
+    try {
+      const result = await this.authService.registerInstitutionalAdmin(registerDto);
+      return ApiResponse.success(result);
+    } catch (error) {
+      return ApiResponse.error(error.message, 400);
+    }
+  }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req: Session, @Res() res: Response) {
     try {
       const result = await this.authService.validateOAuthLogin(req.user);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      const frontendUrl = 'http://localhost:3001';
       
       // Codificar los datos en base64 para pasarlos en la URL de forma segura
       const authDataBase64 = Buffer.from(JSON.stringify(result)).toString('base64');
@@ -59,7 +120,7 @@ export class AuthController {
       res.setHeader('Content-Type', 'text/html');
       res.send(htmlResponse);
     } catch (error) {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      const frontendUrl = 'http://localhost:3001';
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       const errorBase64 = Buffer.from(JSON.stringify({ message: errorMessage })).toString('base64');
       const errorDataEncoded = encodeURIComponent(errorBase64);
