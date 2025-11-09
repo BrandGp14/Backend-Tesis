@@ -47,13 +47,13 @@ export class AuthService {
       relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user'],
     });
 
-    // 3. Si no existe, crearlo con el rol por defecto "STUDENT"
+    // 3. Si no existe, crearlo con el rol por defecto "USER"
     if (!user) {
       // Busca el rol por nombre
       const defaultRole = await this.roleRepository.findOne({
-        where: { code: 'STUDENT' },
+        where: { code: 'USER' },
       });
-      if (!defaultRole) throw new Error('Default role STUDENT not found');
+      if (!defaultRole) throw new Error('Default role USER not found');
 
       user = this.userRepository.create({
         email,
@@ -200,13 +200,13 @@ export class AuthService {
     // 4. Hash de la contraseña
     const hashedPassword = await PasswordUtil.hashPassword(registerDto.password);
 
-    // 5. Buscar rol por defecto "ESTUDIANTE"
+    // 5. Buscar rol por defecto "USUARIO"
     const defaultRole = await this.roleRepository.findOne({
-      where: { code: 'ESTUDIANTE', enabled: true, deleted: false }
+      where: { code: 'USER', enabled: true, deleted: false }
     });
 
     if (!defaultRole) {
-      throw new BadRequestException('Rol ESTUDIANTE no configurado en el sistema');
+      throw new BadRequestException('Rol USER no configurado en el sistema');
     }
 
     // 6. Crear usuario

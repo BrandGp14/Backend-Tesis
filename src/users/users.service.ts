@@ -14,8 +14,10 @@ import { AdministratorsQueryDto } from './dto/administrators-query.dto';
 import { PromoteUserToAdminDto } from './dto/create-administrator.dto';
 import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
+import { RegisterOrganizadorDto, RegisterOrganizadorResponseDto } from './dto/register-organizador.dto';
 import { PasswordUtil } from '../common/utils/password.util';
 import { Role } from '../roles/entities/role.entity';
+import { InstitutionDepartment } from '../institutes/entities/institution-department.entity';
 
 @Injectable()
 export class UsersService {
@@ -28,6 +30,8 @@ export class UsersService {
     private rolesRepository: Repository<Role>,
     @InjectRepository(UserRole)
     private userRolesRepository: Repository<UserRole>,
+    @InjectRepository(InstitutionDepartment)
+    private departmentsRepository: Repository<InstitutionDepartment>,
   ) { }
 
   async search(page: number, size: number, enabled?: boolean) {
@@ -461,6 +465,110 @@ export class UsersService {
       email: savedUser.email,
       role: 'ADMIN',
       institutionId: registerDto.institutionId,
+      registrationDate: savedUser.createdAt.toISOString(),
+      isActive: true
+    };
+  }
+
+  async registerOrganizador(registerDto: RegisterOrganizadorDto): Promise<RegisterOrganizadorResponseDto> {
+    // Verificar que el departamento existe
+    const department = await this.departmentsRepository.findOne({
+      where: { id: registerDto.departmentId, deleted: false, enabled: true },
+      relations: ['institution']
+    });
+
+    if (!department) {
+      throw new NotFoundException(`Departamento con ID ${registerDto.departmentId} no encontrado o inactivo`);
+    }
+
+    // Verificar que el departamento pertenece a TECSUP
+    if (department.institution.domain !== 'tecsup.edu.pe') {
+      throw new BadRequestException('El departamento debe pertenecer a la institución TECSUP');
+    }
+
+    // Validar que el email corresponde al dominio de TECSUP
+    const emailDomain = registerDto.email.split('@')[1];
+    if (emailDomain !== 'tecsup.edu.pe') {
+      throw new BadRequestException('El email debe corresponder al dominio de TECSUP: @tecsup.edu.pe');
+    }
+
+    // Verificar que no existe un usuario con ese email
+    const existingUserByEmail = await this.usersRepository.findOne({
+      where: { email: registerDto.email, deleted: false }
+    });
+
+    if (existingUserByEmail) {
+      throw new ConflictException(`Ya existe un usuario con el email: ${registerDto.email}`);
+    }
+
+    // Verificar que no existe usuario con el mismo documento
+    const existingUserByDocument = await this.usersRepository.findOne({
+      where: { 
+        document_number: registerDto.document_number,
+        deleted: false 
+      }
+    });
+
+    if (existingUserByDocument) {
+      throw new ConflictException(`Ya existe un usuario con el número de documento: ${registerDto.document_number}`);
+    }
+
+    // Buscar el rol ORGANIZADOR
+    const organizadorRole = await this.rolesRepository.findOne({
+      where: { code: 'ORGANIZADOR', enabled: true, deleted: false }
+    });
+
+    if (!organizadorRole) {
+      throw new NotFoundException('Rol ORGANIZADOR no encontrado en el sistema');
+    }
+
+    // Hash de la contraseña
+    const hashedPassword = await PasswordUtil.hashPassword(registerDto.password);
+
+    // Crear el usuario
+    const newUser = this.usersRepository.create({
+      email: registerDto.email,
+      firstName: registerDto.firstName,
+      lastName: registerDto.lastName,
+      document_number: registerDto.document_number,
+      document_type: registerDto.document_type,
+      phone: registerDto.phone,
+      student_code: registerDto.student_code,
+      password: hashedPassword,
+      enabled: true,
+      deleted: false,
+      last_login: new Date(),
+      createdBy: 'ADMIN',
+      updatedBy: 'ADMIN'
+    });
+
+    // Guardar el usuario
+    const savedUser = await this.usersRepository.save(newUser);
+
+    // Crear la relación usuario-rol-departamento
+    const userRole = this.userRolesRepository.create({
+      user: savedUser,
+      role: organizadorRole,
+      institution: department.institution,
+      department: department,
+      department_id: department.id,
+      enabled: true,
+      deleted: false,
+      createdBy: 'ADMIN',
+      updatedBy: 'ADMIN'
+    });
+
+    await this.userRolesRepository.save(userRole);
+
+    // Retornar respuesta
+    return {
+      id: savedUser.id,
+      name: `${registerDto.firstName} ${registerDto.lastName}`,
+      email: savedUser.email,
+      role: 'ORGANIZADOR',
+      institutionId: department.institution.id,
+      departmentId: department.id,
+      departmentName: department.description,
       registrationDate: savedUser.createdAt.toISOString(),
       isActive: true
     };

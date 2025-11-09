@@ -10,6 +10,7 @@ import {
 import { User } from './user.entity';
 import { Role } from 'src/roles/entities/role.entity';
 import { Institution } from 'src/institutes/entities/institute.entity';
+import { InstitutionDepartment } from 'src/institutes/entities/institution-department.entity';
 import { UserRoleDto } from '../dto/user-role.dto';
 import { UpdateUserRoleDto } from '../dto/update-user-role.dto';
 
@@ -27,6 +28,9 @@ export class UserRole {
   @Column({ type: 'uuid', nullable: false })
   institution_id: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  department_id?: string;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
@@ -38,6 +42,10 @@ export class UserRole {
   @ManyToOne(() => Institution)
   @JoinColumn({ name: 'institution_id' })
   institution: Institution;
+
+  @ManyToOne(() => InstitutionDepartment, { nullable: true })
+  @JoinColumn({ name: 'department_id' })
+  department?: InstitutionDepartment;
 
   @Column({ type: 'boolean', default: true })
   enabled: boolean;
@@ -62,6 +70,7 @@ export class UserRole {
     userRole.user_id = userRoleDto.user_id;
     userRole.role_id = userRoleDto.role_id;
     userRole.institution_id = userRoleDto.institution_id;
+    userRole.department_id = userRoleDto.department_id;
     userRole.createdBy = userId;
     userRole.updatedBy = userId;
     return userRole;
@@ -87,6 +96,8 @@ export class UserRole {
     dto.roleDescription = this.role.description;
     dto.institution_id = this.institution_id;
     dto.institutionDescription = this.institution.description;
+    dto.department_id = this.department_id;
+    dto.departmentDescription = this.department?.description;
     dto.enabled = this.enabled;
 
     if (this.user) dto.userDescription = this.user.firstName + ' ' + this.user.lastName;

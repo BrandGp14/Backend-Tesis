@@ -14,6 +14,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { PaymentModule } from './payment/payment.module';
 import { EntitiesModuleModule } from './entities-module/entities-module.module';
 import { ReportModule } from './report/report.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ReportModule } from './report/report.module';
     PaymentModule,
     EntitiesModuleModule,
     ReportModule,
+    UsersModule,
   ],
   exports: [TypeOrmModule],
   providers: [JwtService, DashboardService],

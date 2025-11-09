@@ -27,6 +27,14 @@ export class UserRoleDto {
     @IsOptional()
     institutionDescription: string
 
+    @IsString()
+    @IsOptional()
+    department_id?: string
+
+    @IsString()
+    @IsOptional()
+    departmentDescription?: string
+
     @IsBoolean()
     @IsOptional()
     enabled: boolean

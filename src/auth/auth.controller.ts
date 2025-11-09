@@ -28,7 +28,7 @@ export class AuthController {
   }
 
   @Post('register')
-  @ApiOperation({ summary: 'Registro de nuevo usuario (estudiante)' })
+  @ApiOperation({ summary: 'Registro de nuevo usuario (USUARIO)' })
   @ApiBody({ type: RegisterDto })
   async register(@Body() registerDto: RegisterDto) {
     try {

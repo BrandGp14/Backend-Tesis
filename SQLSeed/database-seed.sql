@@ -81,6 +81,11 @@ BEGIN
         INSERT INTO roles (id, code, description, enabled, deleted, "createdBy", "createdAt", "updatedBy", "updatedAt")
         VALUES (gen_random_uuid(), 'ESTUDIANTE', 'Estudiante', true, false, 'seeder', NOW(), 'seeder', NOW());
     END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM roles WHERE code = 'USUARIO') THEN
+        INSERT INTO roles (id, code, description, enabled, deleted, "createdBy", "createdAt", "updatedBy", "updatedAt")
+        VALUES (gen_random_uuid(), 'USUARIO', 'Usuario General', true, false, 'seeder', NOW(), 'seeder', NOW());
+    END IF;
 END $$;
 
 -- 3. Insertar Usuarios

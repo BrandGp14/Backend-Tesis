@@ -42,7 +42,7 @@ export class RafflesService {
     if (organizer !== undefined) query.andWhere('user.id = :organizer', { organizer });
     if (department !== undefined) query.andWhere('department.id = :department', { department });
     if (endDate !== undefined) query.andWhere('raffle.endDate <= :endDate', { endDate });
-    if (title !== undefined) query.andWhere('LOWER(raffle.title) LIKE %:title%', { 'title': title.toLowerCase() });
+    if (title !== undefined) query.andWhere('LOWER(raffle.title) LIKE :title', { title: `%${title.toLowerCase()}%` });
 
     if (popularity !== undefined && popularity) query.orderBy('raffle.sold', 'DESC').addOrderBy('raffle.createdAt', 'DESC');
     else query.orderBy('raffle.createdAt', 'DESC').addOrderBy('raffle.sold', 'DESC');

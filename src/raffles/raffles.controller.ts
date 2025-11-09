@@ -3,30 +3,36 @@ import { RafflesService } from './raffles.service';
 import { PageReference } from 'src/common/enum/page.reference';
 import { ApiResponse } from 'src/common/dto/api.response.dto';
 import { JwtAuthService } from 'src/jwt-auth/jwt-auth.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RaffleDto } from './dto/raffle.dto';
 import { JwtDto } from 'src/jwt-auth/dto/jwt.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { SearchRaffleDto } from './dto/search-raffle.dto';
 
 @Controller('raffles')
 @ApiBearerAuth()
+@ApiTags('raffles')
 export class RafflesController {
   constructor(private readonly rafflesService: RafflesService) { }
 
   @Get('/search')
   @UseGuards(JwtAuthService)
-  async search(
-    @Query('page', new DefaultValuePipe(PageReference.PAGE), ParseIntPipe) page: number,
-    @Query('size', new DefaultValuePipe(PageReference.SIZE), ParseIntPipe) size: number,
-    @Query('enabled') enabled?: boolean,
-    @Query('institution') institution?: string,
-    @Query('organizer') organizer?: string,
-    @Query('department') department?: string,
-    @Query('endDate') endDate?: Date,
-    @Query('popularity') popularity?: boolean,
-    @Query('title') title?: string,
-  ) {
-    const raffles = await this.rafflesService.search(page, size, enabled, institution, organizer, department, endDate, popularity, title);
+  @ApiOperation({ 
+    summary: 'Search raffles with filters and pagination',
+    description: 'Get paginated list of raffles with optional filters for student dashboard'
+  })
+  async search(@Query() searchDto: SearchRaffleDto) {
+    const raffles = await this.rafflesService.search(
+      searchDto.page || 1,
+      searchDto.size || 12,
+      searchDto.enabled,
+      searchDto.institution,
+      searchDto.organizer,
+      searchDto.department,
+      searchDto.endDate ? new Date(searchDto.endDate) : undefined,
+      searchDto.popularity,
+      searchDto.title
+    );
 
     return ApiResponse.success(raffles);
   }

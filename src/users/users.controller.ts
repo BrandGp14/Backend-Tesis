@@ -30,6 +30,7 @@ import { AdministratorsQueryDto } from './dto/administrators-query.dto';
 import { PromoteUserToAdminDto, CreateAdministratorResponseDto } from './dto/create-administrator.dto';
 import { ChangeUserRoleDto, ChangeUserRoleResponseDto } from './dto/change-user-role.dto';
 import { RegisterAdminDto, RegisterAdminResponseDto } from './dto/register-admin.dto';
+import { RegisterOrganizadorDto, RegisterOrganizadorResponseDto } from './dto/register-organizador.dto';
 
 @Controller('users')
 @ApiTags('Users')
@@ -116,5 +117,20 @@ export class UsersController {
 
     const user = await this.usersService.update(id, updateProfileDto, req.user);
     return ApiResponse.success(user);
+  }
+
+  @Post('register-organizador')
+  @Roles('ADMIN', 'ADMINSUPREMO')
+  @ApiOperation({ 
+    summary: 'Registrar organizador para departamentos de TECSUP',
+    description: 'Endpoint para que administradores registren organizadores asignados a departamentos específicos de TECSUP. Permite registrar 5 organizadores por departamento: Tecnología Digital, Mecánica y Aviación, Minería Procesos Químicos y Metalúrgicos, Electricidad y Electrónica, y Gestión y Producción.' 
+  })
+  async registerOrganizador(@Body() registerDto: RegisterOrganizadorDto) {
+    try {
+      const organizador = await this.usersService.registerOrganizador(registerDto);
+      return ApiResponse.success(organizador);
+    } catch (error) {
+      return ApiResponse.error(error.message, error.status || 500);
+    }
   }
 }
