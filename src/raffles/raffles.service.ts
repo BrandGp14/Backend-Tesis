@@ -10,12 +10,15 @@ import { UploadFileService } from 'src/upload-file/upload-file.service';
 import { Institution } from 'src/institutes/entities/institute.entity';
 import { InstitutionDepartment } from 'src/institutes/entities/institution-department.entity';
 import { User } from 'src/users/entities/user.entity';
+import { RaffleNumber } from './entities/raffle-number.entity';
 
 @Injectable()
 export class RafflesService {
   constructor(
     @InjectRepository(Raffle)
     private readonly raffleRepository: Repository<Raffle>,
+    @InjectRepository(RaffleNumber)
+    private readonly raffleNumberRepository: Repository<RaffleNumber>,
     @InjectRepository(Institution)
     private readonly institutionRepository: Repository<Institution>,
     @InjectRepository(InstitutionDepartment)
@@ -90,29 +93,39 @@ export class RafflesService {
       throw new BadRequestException(`Usuario organizador con ID ${dto.organizer_id} no existe`);
     }
 
-    const uploadFiles = await Promise.all(
+    const uploadFiles = files && files.length > 0 ? await Promise.all(
       files.map(async (f) => {
-        const existInRaffleImages = dto.raffleImages.find(ri => ri.imageUrl === f.originalname) || dto.raffleGiftImages.find(ri => ri.imageUrl === f.originalname);
+        const existInRaffleImages = dto.raffleImages?.find(ri => ri.imageUrl === f.originalname) || dto.raffleGiftImages?.find(ri => ri.imageUrl === f.originalname);
         if (!existInRaffleImages) return undefined;
         const url = await this.uploadFileService.uploadFile(f);
         return { fileName: f.originalname, fileUrl: url };
       })
-    );
+    ) : [];
 
-    dto.raffleImages.forEach((raffleImages) => {
-      const f = uploadFiles.find(f => f?.fileName === raffleImages.imageUrl);
-      if (f && f.fileUrl) raffleImages.imageUrl = f.fileUrl;
-    })
+    if (dto.raffleImages && Array.isArray(dto.raffleImages)) {
+      dto.raffleImages.forEach((raffleImages) => {
+        const f = uploadFiles.find(f => f?.fileName === raffleImages.imageUrl);
+        if (f && f.fileUrl) raffleImages.imageUrl = f.fileUrl;
+      });
+    }
 
-    dto.raffleGiftImages.forEach((raffleGiftImages) => {
-      const f = uploadFiles.find(f => f?.fileName === raffleGiftImages.imageUrl);
-      if (f && f.fileUrl) raffleGiftImages.imageUrl = f.fileUrl;
-    })
+    if (dto.raffleGiftImages && Array.isArray(dto.raffleGiftImages)) {
+      dto.raffleGiftImages.forEach((raffleGiftImages) => {
+        const f = uploadFiles.find(f => f?.fileName === raffleGiftImages.imageUrl);
+        if (f && f.fileUrl) raffleGiftImages.imageUrl = f.fileUrl;
+      });
+    }
 
     let raffle = Raffle.fromDto(dto, jwtDto.sub);
     raffle = await this.raffleRepository.save(raffle);
 
-    const raffleI = await this.raffleRepository.findOne({ where: { id: raffle.id }, relations: ['raffleImages', 'user', 'institution', 'department', 'raffleGiftImages'] });
+    // Generar números individuales para la rifa
+    await this.generateRaffleNumbers(raffle.id, dto.available, jwtDto.sub);
+
+    const raffleI = await this.raffleRepository.findOne({ 
+      where: { id: raffle.id }, 
+      relations: ['raffleImages', 'user', 'institution', 'department', 'raffleGiftImages', 'raffleNumbers'] 
+    });
 
     return raffleI?.toDto();
   }
@@ -179,5 +192,127 @@ export class RafflesService {
       .getMany();
 
     return raffles?.map(r => r.toDto());
+  }
+
+  /**
+   * Genera números individuales para una rifa recién creada
+   * @param raffleId ID de la rifa
+   * @param totalNumbers Cantidad total de números a generar (campo available)
+   * @param userId Usuario que crea los números
+   */
+  private async generateRaffleNumbers(raffleId: string, totalNumbers: number, userId: string): Promise<void> {
+    const raffleNumbers: RaffleNumber[] = [];
+
+    // Generar números del 1 hasta totalNumbers
+    for (let i = 1; i <= totalNumbers; i++) {
+      const raffleNumber = RaffleNumber.create(raffleId, i, userId);
+      raffleNumbers.push(raffleNumber);
+    }
+
+    // Guardar todos los números en lotes para mejor performance
+    const batchSize = 1000;
+    for (let i = 0; i < raffleNumbers.length; i += batchSize) {
+      const batch = raffleNumbers.slice(i, i + batchSize);
+      await this.raffleNumberRepository.save(batch);
+    }
+  }
+
+  /**
+   * Obtiene estadísticas de disponibilidad de números para una rifa
+   * @param raffleId ID de la rifa
+   * @returns Estadísticas de números disponibles, reservados y vendidos
+   */
+  async getRaffleNumbersStats(raffleId: string) {
+    const stats = await this.raffleNumberRepository
+      .createQueryBuilder('rn')
+      .select('rn.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .where('rn.raffle_id = :raffleId AND rn.deleted = false', { raffleId })
+      .groupBy('rn.status')
+      .getRawMany();
+
+    const result = {
+      available: 0,
+      reserved: 0,
+      sold: 0
+    };
+
+    stats.forEach(stat => {
+      result[stat.status.toLowerCase()] = parseInt(stat.count);
+    });
+
+    return result;
+  }
+
+  /**
+   * Obtiene los números vendidos de una rifa
+   * @param raffleId ID de la rifa
+   * @returns Array de números vendidos
+   */
+  async getSoldNumbers(raffleId: string): Promise<number[]> {
+    const soldNumbers = await this.raffleNumberRepository.find({
+      where: { 
+        raffle_id: raffleId, 
+        status: 'SOLD' as any,
+        deleted: false 
+      },
+      select: ['number'],
+      order: { number: 'ASC' }
+    });
+
+    return soldNumbers.map(rn => rn.number);
+  }
+
+  /**
+   * Reserva números para un usuario
+   * @param raffleId ID de la rifa
+   * @param selectedNumbers Array de números a reservar
+   * @param userId ID del usuario
+   * @returns Información de la reserva
+   */
+  async reserveNumbers(raffleId: string, selectedNumbers: number[], userId: string) {
+    // Verificar que la rifa existe
+    const raffle = await this.raffleRepository.findOne({
+      where: { id: raffleId, deleted: false }
+    });
+
+    if (!raffle) {
+      throw new NotFoundException('Raffle not found');
+    }
+
+    // Verificar que los números existen y están disponibles
+    const raffleNumbers = await this.raffleNumberRepository.find({
+      where: { 
+        raffle_id: raffleId, 
+        number: selectedNumbers as any,
+        deleted: false 
+      }
+    });
+
+    if (raffleNumbers.length !== selectedNumbers.length) {
+      throw new BadRequestException('Some numbers are not valid for this raffle');
+    }
+
+    const unavailableNumbers = raffleNumbers.filter(rn => rn.status !== 'AVAILABLE');
+    if (unavailableNumbers.length > 0) {
+      throw new BadRequestException(`Numbers ${unavailableNumbers.map(rn => rn.number).join(', ')} are not available`);
+    }
+
+    // Reservar los números
+    const reservationId = `res_${Date.now()}`;
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
+    for (const raffleNumber of raffleNumbers) {
+      raffleNumber.reserve(userId, 15);
+    }
+
+    await this.raffleNumberRepository.save(raffleNumbers);
+
+    return {
+      reservationId,
+      expiresAt: expiresAt.toISOString(),
+      reservedNumbers: selectedNumbers,
+      timeRemaining: 900 // 15 minutos en segundos
+    };
   }
 }

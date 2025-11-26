@@ -513,13 +513,13 @@ export class UsersService {
       throw new ConflictException(`Ya existe un usuario con el número de documento: ${registerDto.document_number}`);
     }
 
-    // Buscar el rol ORGANIZADOR
+    // Buscar el rol ORGANIZER
     const organizadorRole = await this.rolesRepository.findOne({
-      where: { code: 'ORGANIZADOR', enabled: true, deleted: false }
+      where: { code: 'ORGANIZER', enabled: true, deleted: false }
     });
 
     if (!organizadorRole) {
-      throw new NotFoundException('Rol ORGANIZADOR no encontrado en el sistema');
+      throw new NotFoundException('Rol ORGANIZER no encontrado en el sistema');
     }
 
     // Hash de la contraseña
@@ -565,7 +565,7 @@ export class UsersService {
       id: savedUser.id,
       name: `${registerDto.firstName} ${registerDto.lastName}`,
       email: savedUser.email,
-      role: 'ORGANIZADOR',
+      role: 'ORGANIZER',
       institutionId: department.institution.id,
       departmentId: department.id,
       departmentName: department.description,

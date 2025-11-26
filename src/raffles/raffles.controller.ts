@@ -8,6 +8,7 @@ import { RaffleDto } from './dto/raffle.dto';
 import { JwtDto } from 'src/jwt-auth/dto/jwt.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { SearchRaffleDto } from './dto/search-raffle.dto';
+import { ReserveTicketsDto } from './dto/raffle-number.dto';
 
 @Controller('raffles')
 @ApiBearerAuth()
@@ -47,6 +48,10 @@ export class RafflesController {
   @Post()
   @UseGuards(JwtAuthService)
   @UseInterceptors(FilesInterceptor('files'))
+  @ApiOperation({ 
+    summary: 'Create a new raffle',
+    description: 'Creates a new raffle with automatic number generation. Numbers will be created from 1 to the "available" amount with AVAILABLE status.'
+  })
   async create(@UploadedFiles() files: Express.Multer.File[], @Body() createRaffleDto: RaffleDto, @Req() req: { user: JwtDto }) {
     const raffle = await this.rafflesService.create(files, createRaffleDto, req.user);
     return ApiResponse.success(raffle);
@@ -74,5 +79,33 @@ export class RafflesController {
   async searchMe(@Req() req: { user: JwtDto }) {
     const raffles = await this.rafflesService.searchMe(req.user);
     return ApiResponse.success(raffles);
+  }
+
+  @Get(':id/tickets/sold')
+  @ApiOperation({ 
+    summary: 'Get sold numbers for a raffle',
+    description: 'Returns an array of sold ticket numbers for the specified raffle'
+  })
+  async getSoldNumbers(@Param('id') id: string) {
+    const soldNumbers = await this.rafflesService.getSoldNumbers(id);
+    return ApiResponse.success({ soldNumbers });
+  }
+
+  @Post(':id/tickets/reserve')
+  @UseGuards(JwtAuthService)
+  @ApiOperation({ 
+    summary: 'Reserve numbers for a raffle',
+    description: 'Reserve specific numbers for a user with expiration time'
+  })
+  async reserveNumbers(
+    @Param('id') id: string, 
+    @Body() reserveDto: ReserveTicketsDto
+  ) {
+    const reservation = await this.rafflesService.reserveNumbers(
+      id, 
+      reserveDto.selectedNumbers, 
+      reserveDto.userId
+    );
+    return ApiResponse.success(reservation);
   }
 }

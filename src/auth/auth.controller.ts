@@ -74,7 +74,8 @@ export class AuthController {
   async googleAuthCallback(@Req() req: Session, @Res() res: Response) {
     try {
       const result = await this.authService.validateOAuthLogin(req.user);
-      const frontendUrl = 'http://localhost:3001';
+      // Leer FRONTEND_URL desde .env y normalizar (sin slash final)
+      const frontendUrl = (process.env.FRONTEND_URL);
       
       // Codificar los datos en base64 para pasarlos en la URL de forma segura
       const authDataBase64 = Buffer.from(JSON.stringify(result)).toString('base64');
@@ -120,7 +121,8 @@ export class AuthController {
       res.setHeader('Content-Type', 'text/html');
       res.send(htmlResponse);
     } catch (error) {
-      const frontendUrl = 'http://localhost:3001';
+      // Leer FRONTEND_URL desde .env y normalizar (sin slash final)
+      const frontendUrl = (process.env.FRONTEND_URL);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       const errorBase64 = Buffer.from(JSON.stringify({ message: errorMessage })).toString('base64');
       const errorDataEncoded = encodeURIComponent(errorBase64);

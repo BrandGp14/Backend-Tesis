@@ -9,11 +9,13 @@ import { TicketsService } from './tickets/tickets.service';
 import { Ticket } from './entities/ticket.entity';
 import { EntitiesModuleModule } from 'src/entities-module/entities-module.module';
 import { UploadFileService } from 'src/upload-file/upload-file.service';
+import { RaffleNumbersController } from './raffle-numbers/raffle-numbers.controller';
+import { RaffleNumbersService } from './raffle-numbers/raffle-numbers.service';
 
 @Module({
   imports: [EntitiesModuleModule, UploadFileModule],
-  controllers: [RafflesController, TicketsController],
-  providers: [RafflesService, TicketsService],
-  exports: [],
+  controllers: [RafflesController, TicketsController, RaffleNumbersController],
+  providers: [RafflesService, TicketsService, RaffleNumbersService],
+  exports: [RaffleNumbersService],
 })
 export class RafflesModule { }

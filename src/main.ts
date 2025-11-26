@@ -15,8 +15,11 @@ async function bootstrap() {
     }),
   );
 
+  // Normalize FRONTEND_URL from env (remove trailing slash)
+  const frontendOrigin = (process.env.FRONTEND_URL);
+
   app.enableCors({
-    origin: 'http://localhost:3001',
+    origin: "http://localhost:3001",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'institution'],

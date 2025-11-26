@@ -10,6 +10,8 @@ import { Ticket } from './ticket.entity';
 import { RaffleSerie } from './raffle-serie.entity';
 import { RaffleGiftImage } from './rafle-gift-image.entity';
 import { Payment } from 'src/payment/entity/payment.entity';
+import { RaffleNumber } from './raffle-number.entity';
+import { RaffleNumberStatus } from '../enums/raffle-number-status.enum';
 
 @Entity('raffles')
 @Index(['id', 'winner', 'institution_id', 'institution_department_id', 'organizer_id'])
@@ -54,7 +56,7 @@ export class Raffle {
   allowExternalParticipants: boolean;
 
   @Column({ type: 'uuid', nullable: true })
-  winner: string
+  winner: string | null
 
   @Column()
   drawDate: Date;
@@ -116,6 +118,9 @@ export class Raffle {
   @OneToMany(() => Payment, (payment) => payment.raffle)
   payments: Payment[];
 
+  @OneToMany(() => RaffleNumber, (raffleNumber) => raffleNumber.raffle, { cascade: true })
+  raffleNumbers: RaffleNumber[];
+
   static fromDto(raffleDto: RaffleDto, userId: string) {
     const raffle = new Raffle();
 
@@ -130,7 +135,7 @@ export class Raffle {
     raffle.assignedPerUser = raffleDto.assignedPerUser !== undefined ? raffleDto.assignedPerUser : 1;
     raffle.startDate = raffleDto.startDate;
     raffle.endDate = raffleDto.endDate;
-    raffle.winner = raffleDto.winner;
+    raffle.winner = raffleDto.winner && raffleDto.winner.trim() !== '' ? raffleDto.winner : null;
     raffle.drawDate = raffleDto.drawDate;
     raffle.institution_id = raffleDto.institution_id;
     raffle.institution_department_id = raffleDto.institution_department_id;
@@ -142,13 +147,13 @@ export class Raffle {
     if (raffleDto.status !== undefined) raffle.status = raffleDto.status as RaffleStatusReference;
     if (raffleDto.enabled !== undefined) raffle.enabled = raffleDto.enabled;
 
-    if (raffleDto.raffleImages.length > 0) {
+    if (raffleDto.raffleImages && Array.isArray(raffleDto.raffleImages) && raffleDto.raffleImages.length > 0) {
       raffle.raffleImages = [
         ...raffleDto.raffleImages.map((raffleImageDto) => RaffleImage.fromDto(raffleImageDto, userId))
       ]
     }
 
-    if (raffleDto.raffleGiftImages.length > 0) {
+    if (raffleDto.raffleGiftImages && Array.isArray(raffleDto.raffleGiftImages) && raffleDto.raffleGiftImages.length > 0) {
       raffle.raffleGiftImages = [
         ...raffleDto.raffleGiftImages.map((raffleGiftImageDto) => RaffleGiftImage.fromDto(raffleGiftImageDto, userId))
       ]
@@ -206,7 +211,10 @@ export class Raffle {
     dto.awardDescription = this.awardDescription;
     dto.price = this.price;
     dto.available = this.available;
-    dto.sold = this.sold;
+    // Calcular dinámicamente los números vendidos basándose en RaffleNumbers con estado SOLD
+    dto.sold = (this.raffleNumbers && Array.isArray(this.raffleNumbers)) 
+      ? this.raffleNumbers.filter(rn => rn.status === RaffleNumberStatus.SOLD && !rn.deleted).length 
+      : this.sold;
     dto.assignedPerUser = this.assignedPerUser;
     dto.startDate = this.startDate;
     dto.endDate = this.endDate;
@@ -216,15 +224,16 @@ export class Raffle {
     dto.status = RaffleStatusReference[this.status] as keyof typeof RaffleStatusReference;
     dto.enabled = this.enabled;
     dto.institution_id = this.institution_id;
-    dto.institutionDescription = this.institution.description;
+    dto.institutionDescription = this.institution?.description || '';
     dto.institution_department_id = this.institution_department_id;
-    dto.institutionDepartmentDescription = this.department.description;
+    dto.institutionDepartmentDescription = this.department?.description || '';
     dto.organizer_id = this.organizer_id;
-    dto.organizerDescription = this.user.firstName + ' ' + this.user.lastName;
+    dto.organizerDescription = this.user ? `${this.user.firstName} ${this.user.lastName}` : '';
 
-    if (this.raffleImages) dto.raffleImages = this.raffleImages?.map(ri => ri.toDto());
-    if (this.raffleGiftImages) dto.raffleGiftImages = this.raffleGiftImages?.map(ri => ri.toDto());
-    if (this.tickets) dto.tickets = this.tickets?.map(t => t.toDto());
+    if (this.raffleImages && Array.isArray(this.raffleImages)) dto.raffleImages = this.raffleImages.map(ri => ri.toDto());
+    if (this.raffleGiftImages && Array.isArray(this.raffleGiftImages)) dto.raffleGiftImages = this.raffleGiftImages.map(ri => ri.toDto());
+    if (this.tickets && Array.isArray(this.tickets)) dto.tickets = this.tickets.map(t => t.toDto());
+    if (this.raffleNumbers && Array.isArray(this.raffleNumbers)) dto.raffleNumbers = this.raffleNumbers.map(rn => rn.toDto());
 
     return dto;
   }
