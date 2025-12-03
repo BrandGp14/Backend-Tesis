@@ -85,7 +85,7 @@ export class User {
   @JoinColumn({ name: 'parent_id' })
   parent_id: User;
 
-  static fromDto(userDto: UserDto, userId: string) {
+  static fromDto(userDto: UserDto, assigned: User[], userId: string) {
     const user = new User();
     user.email = userDto.email;
     user.firstName = userDto.firstName;
@@ -104,11 +104,7 @@ export class User {
       ]
     }
 
-    if (userDto.assigned.length > 0) {
-      user.assigned = [
-        ...userDto.assigned.map((userDto) => User.fromDto(userDto, userId))
-      ]
-    }
+    user.assigned = [...assigned]
 
     // user.institution_id = userDto.institution!.id;
 
@@ -136,11 +132,6 @@ export class User {
         else assigned.delete(userId);
       })
     }
-
-    this.assigned = [
-      ...this.assigned || [],
-      ...user.assigned!.filter((user) => !user.id).map((user) => User.fromDto(user, userId))
-    ]
 
     // this.institution_id = user.institution!.id;
 

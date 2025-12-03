@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UserDto } from './dto/user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -69,7 +69,10 @@ export class UsersService {
   }
 
   async create(dto: UserDto, jwtDto: JwtDto) {
-    let user = User.fromDto(dto, jwtDto.sub);
+
+    const assigned = await this.usersRepository.find({ where: { id: In(dto.assigned.map(a => a.id)) } });
+
+    let user = User.fromDto(dto, assigned, jwtDto.sub);
     user = await this.usersRepository.save(user);
     return user.toDto();
   }
