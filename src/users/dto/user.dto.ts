@@ -62,4 +62,9 @@ export class UserDto {
   @IsOptional()
   @Type(() => UserRoleDto)
   roles: UserRoleDto[] = [];
+
+  @IsArray()
+  @IsOptional()
+  @Type(() => UserDto)
+  assigned: UserDto[] = [];
 }

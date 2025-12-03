@@ -6,11 +6,14 @@ import {
   UpdateDateColumn,
   OneToMany,
   Index,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { UserRole } from './user-role.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserDto } from '../dto/user.dto';
 import { Raffle } from 'src/raffles/entities/raffle.entity';
+
 @Entity('users')
 @Index('UQ_USER_EMAIL_UNIQUE_ON_DELETED_FALSE', ['email'], { unique: true, where: '"deleted" = false' })
 @Index(['id', 'email'])
@@ -75,6 +78,13 @@ export class User {
   @OneToMany(() => Raffle, (raffle) => raffle.user)
   raffles: Raffle[];
 
+  @OneToMany(() => User, (user) => user.parent_id, { cascade: true })
+  assigned: User[];
+
+  @ManyToOne(() => User, (user) => user.assigned)
+  @JoinColumn({ name: 'parent_id' })
+  parent_id: User;
+
   static fromDto(userDto: UserDto, userId: string) {
     const user = new User();
     user.email = userDto.email;
@@ -91,6 +101,12 @@ export class User {
     if (userDto.roles.length > 0) {
       user.userRoles = [
         ...userDto.roles.map((userRoleDto) => UserRole.fromDto(userRoleDto, userId))
+      ]
+    }
+
+    if (userDto.assigned.length > 0) {
+      user.assigned = [
+        ...userDto.assigned.map((userDto) => User.fromDto(userDto, userId))
       ]
     }
 
@@ -113,8 +129,27 @@ export class User {
       ...user.roles!.filter((userRole) => !userRole.id).map((userRole) => UserRole.fromDto(userRole, userId))
     ]
 
+    if (this.assigned) {
+      this.assigned.forEach((assigned) => {
+        const userOp = user.assigned?.find((userOp) => userOp.id === assigned.id);
+        if (userOp) assigned.update(userOp, userId);
+        else assigned.delete(userId);
+      })
+    }
+
+    this.assigned = [
+      ...this.assigned || [],
+      ...user.assigned!.filter((user) => !user.id).map((user) => User.fromDto(user, userId))
+    ]
+
     // this.institution_id = user.institution!.id;
 
+    this.updatedBy = userId;
+  }
+
+  delete(userId: string) {
+    this.enabled = false;
+    this.deleted = true;
     this.updatedBy = userId;
   }
 
@@ -138,6 +173,7 @@ export class User {
     dto.enabled = this.enabled;
 
     if (this.userRoles) dto.roles = this.userRoles.map(ur => ur.toDto());
+    if (this.assigned) dto.assigned = this.assigned.map(u => u.toDto());
 
     return dto;
   }

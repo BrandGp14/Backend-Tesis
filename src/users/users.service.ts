@@ -51,13 +51,19 @@ export class UsersService {
   }
 
   async find(id: string) {
-    const user = await this.usersRepository.findOne({ where: { id, deleted: false }, relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user'] });
+    const user = await this.usersRepository.findOne({
+      where: { id, deleted: false },
+      relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user', 'assigned']
+    });
     if (!user) return undefined;
     return user.toDto();
   }
 
   async findByEmail(email: string) {
-    const user = await this.usersRepository.findOne({ where: { email, deleted: false }, relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user'] });
+    const user = await this.usersRepository.findOne({
+      where: { email, deleted: false },
+      relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user', 'assigned']
+    });
     if (!user) return undefined;
     return user.toDto();
   }
@@ -69,7 +75,10 @@ export class UsersService {
   }
 
   async update(id: string, dto: UpdateUserDto, jwtDto: JwtDto) {
-    let user = await this.usersRepository.findOne({ where: { id, deleted: false }, relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user'] });
+    let user = await this.usersRepository.findOne({
+      where: { id, deleted: false },
+      relations: ['userRoles', 'userRoles.role', 'userRoles.institution', 'userRoles.user', 'assigned']
+    });
 
     if (!user) throw new NotFoundException('User not found');
 
@@ -99,7 +108,7 @@ export class UsersService {
     // Mapear a DTO de respuesta
     const adminDtos: AdminUserDto[] = adminUsers.map(user => {
       // Obtener la institución principal (primera activa)
-      const primaryUserRole = user.userRoles?.find(ur => 
+      const primaryUserRole = user.userRoles?.find(ur =>
         ur.enabled && !ur.deleted && ['ADMIN', 'ADMINSUPREMO'].includes(ur.role.code)
       );
 
@@ -128,11 +137,11 @@ export class UsersService {
   }
 
   async getAdministratorsDashboard(query: AdministratorsQueryDto): Promise<AdministratorsDashboardDto> {
-    const { 
-      adminPage = 1, 
-      adminLimit = 10, 
-      institutionPage = 1, 
-      institutionLimit = 10 
+    const {
+      adminPage = 1,
+      adminLimit = 10,
+      institutionPage = 1,
+      institutionLimit = 10
     } = query;
 
     // Calcular skip para administradores
@@ -160,7 +169,7 @@ export class UsersService {
 
     // Mapear administradores
     const administrators: AdministratorItemDto[] = adminUsers.map(user => {
-      const primaryUserRole = user.userRoles?.find(ur => 
+      const primaryUserRole = user.userRoles?.find(ur =>
         ur.enabled && !ur.deleted && ['ADMIN', 'ADMINSUPREMO'].includes(ur.role.code)
       );
 
@@ -254,9 +263,9 @@ export class UsersService {
     }
 
     // Buscar rol actual del usuario en esta institución
-    const currentUserRole = user.userRoles.find(ur => 
-      ur.institution.id === promoteDto.institutionId && 
-      !ur.deleted && 
+    const currentUserRole = user.userRoles.find(ur =>
+      ur.institution.id === promoteDto.institutionId &&
+      !ur.deleted &&
       ur.enabled
     );
 
@@ -332,9 +341,9 @@ export class UsersService {
     }
 
     // Buscar rol actual del usuario en esta institución
-    const currentUserRole = user.userRoles.find(ur => 
-      ur.institution.id === changeDto.institutionId && 
-      !ur.deleted && 
+    const currentUserRole = user.userRoles.find(ur =>
+      ur.institution.id === changeDto.institutionId &&
+      !ur.deleted &&
       ur.enabled
     );
 
@@ -404,9 +413,9 @@ export class UsersService {
 
     // Verificar que no existe usuario con el mismo documento
     const existingUserByDocument = await this.usersRepository.findOne({
-      where: { 
+      where: {
         document_number: registerDto.document_number,
-        deleted: false 
+        deleted: false
       }
     });
 
@@ -503,9 +512,9 @@ export class UsersService {
 
     // Verificar que no existe usuario con el mismo documento
     const existingUserByDocument = await this.usersRepository.findOne({
-      where: { 
+      where: {
         document_number: registerDto.document_number,
-        deleted: false 
+        deleted: false
       }
     });
 
