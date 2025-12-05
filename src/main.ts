@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, WebSocketAdapter } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ApiExceptionResponseFilter } from './api.exception.response.filter';
@@ -16,7 +16,7 @@ async function bootstrap() {
   );
 
   // Normalize FRONTEND_URL from env (remove trailing slash)
-  const frontendOrigin = (process.env.FRONTEND_URL);
+  // const frontendOrigin = (process.env.FRONTEND_URL);
 
   app.enableCors({
     origin: "http://localhost:3001",
@@ -48,4 +48,5 @@ async function bootstrap() {
   //login url
   console.log(`📚 Login url in ${process.env.NEXT_AUTH_URL}`);
 }
+
 bootstrap();

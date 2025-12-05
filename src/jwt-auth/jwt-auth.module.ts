@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConfig } from 'src/config/jwt.config';
 import { JwtAuthStrategy } from './jwt-auth.strategy';
 import { JwtAuthService } from './jwt-auth.service';
+import { JwtWsAuthGuard } from './jwt-ws-auth.guard';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { JwtAuthService } from './jwt-auth.service';
       useFactory: (configService: ConfigService) => jwtConfig(configService),
     }),
   ],
-  exports: [JwtModule],
-  providers: [JwtAuthStrategy, JwtAuthService],
+  providers: [JwtAuthStrategy, JwtAuthService, JwtWsAuthGuard],
+  exports: [JwtModule]
 })
 export class JWTAuthModule { }

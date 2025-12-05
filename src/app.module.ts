@@ -8,13 +8,13 @@ import { InstitutesModule } from './institutes/institutes.module';
 import { UploadFileModule } from './upload-file/upload-file.module';
 import { JWTAuthModule } from './jwt-auth/jwt-auth.module';
 import { JwtService } from '@nestjs/jwt';
-import { DashboardController } from './dashboard/dashboard.controller';
-import { DashboardService } from './dashboard/dashboard.service';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PaymentModule } from './payment/payment.module';
 import { EntitiesModuleModule } from './entities-module/entities-module.module';
 import { ReportModule } from './report/report.module';
 import { UsersModule } from './users/users.module';
+import { NotificationModule } from './notification/notification.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -26,6 +26,7 @@ import { UsersModule } from './users/users.module';
       useFactory: (configService: ConfigService) => getDatabaseConfig(configService),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     RafflesModule,
     InstitutesModule,
@@ -36,9 +37,10 @@ import { UsersModule } from './users/users.module';
     EntitiesModuleModule,
     ReportModule,
     UsersModule,
+    NotificationModule
   ],
   exports: [TypeOrmModule],
-  providers: [JwtService, DashboardService],
-  controllers: [DashboardController],
+  providers: [JwtService],
+  controllers: [],
 })
 export class AppModule { }
