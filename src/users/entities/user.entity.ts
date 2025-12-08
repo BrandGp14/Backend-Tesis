@@ -13,6 +13,7 @@ import { UserRole } from './user-role.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserDto } from '../dto/user.dto';
 import { Raffle } from 'src/raffles/entities/raffle.entity';
+import { Professor } from '../../professors/entities/professor.entity';
 
 @Entity('users')
 @Index('UQ_USER_EMAIL_UNIQUE_ON_DELETED_FALSE', ['email'], { unique: true, where: '"deleted" = false' })
@@ -77,6 +78,9 @@ export class User {
 
   @OneToMany(() => Raffle, (raffle) => raffle.user)
   raffles: Raffle[];
+
+  @OneToMany(() => Professor, (professor) => professor.user)
+  professors: Professor[];
 
   @OneToMany(() => User, (user) => user.parent_id, { cascade: true })
   assigned: User[];

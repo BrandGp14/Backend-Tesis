@@ -37,9 +37,9 @@ export class InstitutesController {
   constructor(private readonly institutesService: InstitutesService) { }
 
   @Get()
-  @Roles('ADMINSUPREMO')
+  @Roles('SUPER_ADMIN')
   @ApiOkResponse({
-    description: 'Lista paginada de instituciones con filtros (Solo ADMINSUPREMO)',
+    description: 'Lista paginada de instituciones con filtros (Solo SUPER_ADMIN)',
     type: InstitutionsListResponseDto,
   })
   async getInstitutions(@Query() query: InstitutionsQueryDto) {
@@ -52,10 +52,10 @@ export class InstitutesController {
   }
 
   @Post()
-  @Roles('ADMINSUPREMO')
+  @Roles('SUPER_ADMIN')
   @ApiOperation({ 
     summary: 'Crear nueva institución',
-    description: 'Endpoint exclusivo para ADMINSUPREMO. Crea una nueva institución en el sistema' 
+    description: 'Endpoint exclusivo para SUPER_ADMIN. Crea una nueva institución en el sistema' 
   })
   async createInstitution(@Body() createInstitutionDto: CreateInstitutionDto) {
     try {
@@ -67,10 +67,10 @@ export class InstitutesController {
   }
 
   @Put(':id')
-  @Roles('ADMINSUPREMO')
+  @Roles('SUPER_ADMIN')
   @ApiOperation({ 
     summary: 'Actualizar institución existente',
-    description: 'Endpoint exclusivo para ADMINSUPREMO. Actualiza los datos de una institución' 
+    description: 'Endpoint exclusivo para SUPER_ADMIN. Actualiza los datos de una institución' 
   })
   async updateInstitution(
     @Param('id') id: string,
@@ -85,10 +85,10 @@ export class InstitutesController {
   }
 
   @Patch(':id/status')
-  @Roles('ADMINSUPREMO')
+  @Roles('SUPER_ADMIN')
   @ApiOperation({ 
     summary: 'Cambiar estado de institución (activo/inactivo)',
-    description: 'Endpoint exclusivo para ADMINSUPREMO. Activa o desactiva una institución' 
+    description: 'Endpoint exclusivo para SUPER_ADMIN. Activa o desactiva una institución' 
   })
   async updateInstitutionStatus(
     @Param('id') id: string,

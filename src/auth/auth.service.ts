@@ -316,16 +316,16 @@ export class AuthService {
     // 6. Hash de la contraseña
     const hashedPassword = await PasswordUtil.hashPassword(registerAdminDto.password);
 
-    // 7. Buscar rol ADMINSUPREMO
+    // 7. Buscar rol SUPER_ADMIN
     const adminRole = await this.roleRepository.findOne({
-      where: { code: 'ADMINSUPREMO', enabled: true, deleted: false }
+      where: { code: 'SUPER_ADMIN', enabled: true, deleted: false }
     });
 
     if (!adminRole) {
-      throw new BadRequestException('Rol ADMINSUPREMO no configurado en el sistema');
+      throw new BadRequestException('Rol SUPER_ADMIN no configurado en el sistema');
     }
 
-    console.log('👑 Rol ADMINSUPREMO encontrado');
+    console.log('👑 Rol SUPER_ADMIN encontrado');
 
     // 8. Crear usuario administrador
     const newAdmin = this.userRepository.create({

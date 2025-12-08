@@ -22,7 +22,7 @@ export class AdministratorItemDto {
   @ApiProperty({ 
     example: 'ADMIN',
     description: 'Rol del administrador',
-    enum: ['ADMIN', 'ADMINSUPREMO']
+    enum: ['ADMIN', 'SUPER_ADMIN']
   })
   role: string;
 

@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMa
 import { Institution } from "./institute.entity";
 import { InstitutionDepartmentDto } from "../dto/institution-department.dto";
 import { Raffle } from "src/raffles/entities/raffle.entity";
+import { Professor } from "../../professors/entities/professor.entity";
 
 @Entity('departments')
 @Index(['id', 'code'])
@@ -42,6 +43,9 @@ export class InstitutionDepartment {
 
     @OneToMany(() => Raffle, (raffle) => raffle.department)
     raffles: Raffle[];
+
+    @OneToMany(() => Professor, (professor) => professor.department)
+    professors: Professor[];
 
     static fromDto(institutionDepartmentDto: InstitutionDepartmentDto, userId: string) {
         const institutionDepartment = new InstitutionDepartment();

@@ -1,98 +1,260 @@
+# 🎯 WasiRifa Backend - API REST para Gestión de Rifas Institucionales
+
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS" />
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT" />
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 📋 Descripción del Proyecto
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**WasiRifa Backend** es la API REST que potencia la plataforma de gestión de rifas institucionales para universidades e instituciones educativas. Desarrollada con **NestJS** y **TypeScript**, proporciona una arquitectura robusta, segura y escalable para manejar usuarios, instituciones, rifas, pagos y reportes.
 
-## Description
+### 🎯 Características Principales
+- **Sistema de Roles**: 4 niveles jerárquicos (SUPERADMIN, ADMIN, ORGANIZER, USER)
+- **Autenticación**: JWT + Google OAuth 2.0
+- **Base de Datos**: PostgreSQL con TypeORM
+- **Documentación**: Swagger/OpenAPI automática
+- **Seguridad**: Guards basados en roles, validación de DTOs
+- **Archivos**: Upload y gestión con Multer
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🏗️ Arquitectura de Módulos
 
-## Project setup
+### Módulos Principales
+- **AuthModule**: Autenticación JWT y Google OAuth
+- **RafflesModule**: Gestión de rifas, boletos y sorteos
+- **InstitutesModule**: Administración de instituciones y departamentos
+- **UsersModule**: Gestión de usuarios y roles
+- **PaymentModule**: Procesamiento y seguimiento de pagos
+- **ReportModule**: Generación de reportes y métricas
+- **UploadFileModule**: Gestión de archivos e imágenes
 
-```bash
-$ npm install
+### Entidades Principales
+- **User**: Usuarios del sistema con roles
+- **Institution**: Instituciones educativas
+- **Raffle**: Rifas con premios múltiples
+- **RaffleNumber**: Números de rifa individuales
+- **Payment**: Transacciones y pagos
+- **Ticket**: Boletos de participación
+
+## ⚙️ Configuración del Entorno
+
+### Variables de Entorno (.env)
+```env
+# Base de datos
+DATABASE_URL="postgresql://user:password@host:port/database"
+
+# JWT y autenticación
+JWT_SECRET="your-super-secret-jwt-key"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Google OAuth
+GOOGLE_CLIENT_ID="your-google-oauth-client-id"
+GOOGLE_CLIENT_SECRET="your-google-oauth-client-secret"
+
+# Servidor
+PORT=8080
 ```
 
-## Compile and run the project
+## 🚀 Instalación y Ejecución
 
+### Instalación de Dependencias
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
-
+### Ejecutar en Desarrollo
 ```bash
-# unit tests
-$ npm run test
+# Servidor con hot reload
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# El servidor estará disponible en http://localhost:8080
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### Build de Producción
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Compilar TypeScript
+npm run build
+
+# Ejecutar en producción
+npm run start:prod
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Linting y Formateo
+```bash
+# Ejecutar ESLint
+npm run lint
 
-## Resources
+# Formatear código con Prettier
+npm run format
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🧪 Testing
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+# Pruebas unitarias
+npm run test
 
-## Support
+# Pruebas en modo watch
+npm run test:watch
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Pruebas end-to-end
+npm run test:e2e
 
-## Stay in touch
+# Cobertura de pruebas
+npm run test:cov
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 📚 API Documentation
 
-## License
+La documentación de la API está disponible automáticamente mediante Swagger:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **Desarrollo**: http://localhost:8080/api/docs
+- **Producción**: [Deployed URL]/api/docs
+
+### Endpoints Principales
+
+#### Autenticación
+- `POST /api/auth/login` - Login con email/password
+- `POST /api/auth/google` - Login con Google OAuth
+- `POST /api/auth/register` - Registro de usuarios
+
+#### Rifas
+- `GET /api/raffles` - Listar rifas activas
+- `POST /api/raffles` - Crear nueva rifa (ORGANIZER)
+- `GET /api/raffles/:id` - Detalles de rifa específica
+- `POST /api/raffles/:id/purchase` - Comprar boletos
+
+#### Usuarios
+- `GET /api/users/profile` - Perfil del usuario actual
+- `PUT /api/users/profile` - Actualizar perfil
+- `GET /api/users/history` - Historial de participaciones
+
+#### Pagos
+- `POST /api/payments/confirm` - Confirmar pago manual
+- `GET /api/payments/status/:id` - Estado de pago
+
+## 🔐 Sistema de Roles y Permisos
+
+### SUPERADMIN (wasirifa.com)
+- Gestión global del sistema
+- Administración de todas las instituciones
+- Configuraciones globales
+
+### ADMIN (por institución)
+- Gestión de departamentos
+- Asignación de organizadores
+- Reportes institucionales
+
+### ORGANIZER (por departamento)
+- Creación y gestión de rifas
+- Confirmación de pagos
+- Sorteos y reportes
+
+### USER (estudiantes)
+- Participación en rifas
+- Compra de boletos
+- Historial personal
+
+## 🛡️ Seguridad
+
+### Guards Implementados
+- **JwtAuthGuard**: Verificación de tokens JWT
+- **RolesGuard**: Autorización basada en roles
+- **GoogleAuthGuard**: Autenticación OAuth
+
+### Validación
+- **DTOs**: Validación de datos de entrada
+- **Pipes**: Transformación y sanitización
+- **Filters**: Manejo de excepciones globales
+
+## 📊 Base de Datos
+
+### Configuración PostgreSQL
+```typescript
+// src/config/database.config.ts
+{
+  type: 'postgres',
+  url: process.env.DATABASE_URL,
+  entities: ['dist/**/*.entity{.ts,.js}'],
+  synchronize: false, // Usar migraciones en producción
+  ssl: {
+    rejectUnauthorized: false
+  }
+}
+```
+
+### Migraciones (Recomendado para producción)
+```bash
+# Generar migración
+npm run migration:generate -- --name=CreateInitialTables
+
+# Ejecutar migraciones
+npm run migration:run
+```
+
+## 🚀 Deployment
+
+### Variables de Entorno para Producción
+- Configurar `DATABASE_URL` con PostgreSQL en la nube
+- Establecer `JWT_SECRET` seguro
+- Configurar OAuth con dominios de producción
+- Deshabilitar `synchronize` en TypeORM
+
+### Docker (Opcional)
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+CMD ["npm", "run", "start:prod"]
+```
+
+## 📈 Monitoreo y Logs
+
+### Health Check
+- `GET /api/health` - Estado del servidor y base de datos
+
+### Logs
+Los logs se configuran automáticamente con diferentes niveles:
+- **Error**: Errores críticos del sistema
+- **Warn**: Advertencias importantes
+- **Info**: Información general
+- **Debug**: Información detallada (solo desarrollo)
+
+## 🔧 Desarrollo
+
+### Estructura de Carpetas
+```
+src/
+├── auth/              # Módulo de autenticación
+├── config/            # Configuraciones
+├── entities-module/   # Entidades compartidas
+├── institutes/        # Gestión de instituciones
+├── raffles/           # Gestión de rifas
+├── users/             # Gestión de usuarios
+├── payment/           # Sistema de pagos
+├── report/            # Generación de reportes
+├── upload-file/       # Gestión de archivos
+└── main.ts           # Punto de entrada
+```
+
+### Convenciones
+- Usar DTOs para validación de entrada
+- Implementar guards para autorización
+- Documentar endpoints con decoradores Swagger
+- Seguir principios SOLID y Clean Architecture
+
+## 📞 Soporte
+
+Para soporte técnico o consultas sobre el proyecto:
+- Crear issue en el repositorio
+- Revisar documentación en CLAUDE.md
+- Consultar logs de la aplicación
+
+## 📄 Licencia
+
+Proyecto académico - Uso interno/educativo

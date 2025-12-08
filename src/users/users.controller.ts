@@ -52,10 +52,10 @@ export class UsersController {
   }
 
   @Get('admins')
-  @Roles('ADMINSUPREMO')
+  @Roles('SUPER_ADMIN')
   @ApiOperation({ 
     summary: 'Obtiene lista de administradores del sistema',
-    description: 'Endpoint exclusivo para ADMINSUPREMO. Retorna usuarios con roles ADMIN y ADMINSUPREMO' 
+    description: 'Endpoint exclusivo para SUPER_ADMIN. Retorna usuarios con roles ADMIN y SUPER_ADMIN' 
   })
   async getAdmins() {
     try {
@@ -67,10 +67,10 @@ export class UsersController {
   }
 
   @Get('administrators')
-  @Roles('ADMINSUPREMO')
+  @Roles('SUPER_ADMIN')
   @ApiOperation({ 
     summary: 'Obtiene dashboard de administradores e instituciones',
-    description: 'Endpoint exclusivo para ADMINSUPREMO. Retorna administradores e instituciones para el dashboard' 
+    description: 'Endpoint exclusivo para SUPER_ADMIN. Retorna administradores e instituciones para el dashboard' 
   })
   async getAdministratorsDashboard(@Query() query: AdministratorsQueryDto) {
     try {
@@ -120,7 +120,7 @@ export class UsersController {
   }
 
   @Post('register-organizador')
-  @Roles('ADMIN', 'ADMINSUPREMO')
+  @Roles('ADMIN', 'SUPER_ADMIN')
   @ApiOperation({ 
     summary: 'Registrar organizador para departamentos de TECSUP',
     description: 'Endpoint para que administradores registren organizadores asignados a departamentos específicos de TECSUP. Permite registrar 5 organizadores por departamento: Tecnología Digital, Mecánica y Aviación, Minería Procesos Químicos y Metalúrgicos, Electricidad y Electrónica, y Gestión y Producción.' 

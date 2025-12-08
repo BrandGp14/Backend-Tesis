@@ -15,7 +15,7 @@ export class SuperAdminStatsDto {
 
   @ApiProperty({ 
     example: 8, 
-    description: 'Total de administradores (ADMIN + ADMINSUPREMO)' 
+    description: 'Total de administradores (ADMIN + SUPER_ADMIN)' 
   })
   totalAdmins: number;
 

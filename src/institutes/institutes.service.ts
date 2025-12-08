@@ -184,8 +184,8 @@ export class InstitutesService {
       website: '', // Opcional
       enabled: true,
       deleted: false,
-      createdBy: 'ADMINSUPREMO',
-      updatedBy: 'ADMINSUPREMO'
+      createdBy: 'SUPER_ADMIN',
+      updatedBy: 'SUPER_ADMIN'
     });
 
     // Guardar en base de datos
@@ -249,7 +249,7 @@ export class InstitutesService {
     existingInstitution.phone = updateDto.contactPhone;
     existingInstitution.address = updateDto.address;
     existingInstitution.picture = updateDto.logoUrl || undefined;
-    existingInstitution.updatedBy = 'ADMINSUPREMO';
+    existingInstitution.updatedBy = 'SUPER_ADMIN';
 
     // Guardar cambios
     const updatedInstitution = await this.institutesRepository.save(existingInstitution);
@@ -280,7 +280,7 @@ export class InstitutesService {
 
     // Actualizar solo el estado
     existingInstitution.enabled = isActive;
-    existingInstitution.updatedBy = 'ADMINSUPREMO';
+    existingInstitution.updatedBy = 'SUPER_ADMIN';
 
     // Guardar cambios
     await this.institutesRepository.save(existingInstitution);

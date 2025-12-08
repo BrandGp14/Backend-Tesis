@@ -72,9 +72,9 @@ export class DashboardController {
     @Get('superadmin/stats')
     @ApiOperation({ 
         summary: 'Obtiene estadísticas generales del sistema para SuperAdmin',
-        description: 'Endpoint exclusivo para usuarios con rol ADMINSUPREMO' 
+        description: 'Endpoint exclusivo para usuarios con rol SUPER_ADMIN' 
     })
-    @Roles('ADMINSUPREMO')
+    @Roles('SUPER_ADMIN')
     async getSuperAdminStats() {
         try {
             const stats = await this.dashboardService.getSuperAdminStats();

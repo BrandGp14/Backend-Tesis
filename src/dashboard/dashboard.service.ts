@@ -256,14 +256,14 @@ export class DashboardService {
             where: { deleted: false, enabled: true }
         });
 
-        // Total de administradores (ADMIN + ADMINSUPREMO)
+        // Total de administradores (ADMIN + SUPER_ADMIN)
         const { totalAdmins } = await this.usersRepository.createQueryBuilder('user')
             .select('COUNT(DISTINCT(user.id))', 'totalAdmins')
             .leftJoin('user.userRoles', 'userRole')
             .leftJoin('userRole.role', 'role')
             .where('user.deleted = false')
             .andWhere('user.enabled = true')
-            .andWhere('role.code IN (:...roles)', { roles: ['ADMIN', 'ADMINSUPREMO'] })
+            .andWhere('role.code IN (:...roles)', { roles: ['ADMIN', 'SUPER_ADMIN'] })
             .getRawOne();
 
         // Total de usuarios

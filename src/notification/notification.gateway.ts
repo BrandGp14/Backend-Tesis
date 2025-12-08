@@ -4,7 +4,7 @@ import { JwtWsAuthGuard } from "src/jwt-auth/jwt-ws-auth.guard";
 import { Server, Socket } from "socket.io";
 
 
-@WebSocketGateway(3001, { cors: { origin: "*" }, namespace: 'notifications' })
+@WebSocketGateway(3002, { cors: { origin: "*" }, namespace: 'notifications' })
 export class NotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     @WebSocketServer()

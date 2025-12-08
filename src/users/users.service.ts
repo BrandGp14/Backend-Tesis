@@ -95,7 +95,7 @@ export class UsersService {
   }
 
   async getAdminUsers(): Promise<AdminUserDto[]> {
-    // Buscar usuarios con roles ADMIN o ADMINSUPREMO
+    // Buscar usuarios con roles ADMIN o SUPER_ADMIN
     const adminUsers = await this.usersRepository.createQueryBuilder('user')
       .leftJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('userRole.role', 'role')
@@ -104,7 +104,7 @@ export class UsersService {
       .andWhere('user.enabled = true')
       .andWhere('userRole.deleted = false')
       .andWhere('userRole.enabled = true')
-      .andWhere('role.code IN (:...roles)', { roles: ['ADMIN', 'ADMINSUPREMO'] })
+      .andWhere('role.code IN (:...roles)', { roles: ['ADMIN', 'SUPER_ADMIN'] })
       .orderBy('user.createdAt', 'DESC')
       .getMany();
 
@@ -112,12 +112,12 @@ export class UsersService {
     const adminDtos: AdminUserDto[] = adminUsers.map(user => {
       // Obtener la institución principal (primera activa)
       const primaryUserRole = user.userRoles?.find(ur =>
-        ur.enabled && !ur.deleted && ['ADMIN', 'ADMINSUPREMO'].includes(ur.role.code)
+        ur.enabled && !ur.deleted && ['ADMIN', 'SUPER_ADMIN'].includes(ur.role.code)
       );
 
       // Mapear todos los roles administrativos del usuario
       const roles: AdminRoleDto[] = user.userRoles
-        ?.filter(ur => ur.enabled && !ur.deleted && ['ADMIN', 'ADMINSUPREMO'].includes(ur.role.code))
+        ?.filter(ur => ur.enabled && !ur.deleted && ['ADMIN', 'SUPER_ADMIN'].includes(ur.role.code))
         .map(ur => ({
           roleDescription: ur.role.code,
           institutionDescription: ur.institution.description
@@ -158,7 +158,7 @@ export class UsersService {
       .where('user.deleted = false')
       .andWhere('userRole.deleted = false')
       .andWhere('userRole.enabled = true')
-      .andWhere('role.code IN (:...roles)', { roles: ['ADMIN', 'ADMINSUPREMO'] })
+      .andWhere('role.code IN (:...roles)', { roles: ['ADMIN', 'SUPER_ADMIN'] })
       .orderBy('user.createdAt', 'DESC');
 
     // Contar total de administradores
@@ -173,7 +173,7 @@ export class UsersService {
     // Mapear administradores
     const administrators: AdministratorItemDto[] = adminUsers.map(user => {
       const primaryUserRole = user.userRoles?.find(ur =>
-        ur.enabled && !ur.deleted && ['ADMIN', 'ADMINSUPREMO'].includes(ur.role.code)
+        ur.enabled && !ur.deleted && ['ADMIN', 'SUPER_ADMIN'].includes(ur.role.code)
       );
 
       return {
@@ -289,7 +289,7 @@ export class UsersService {
     if (currentUserRole) {
       // Actualizar rol existente (cambiar de ESTUDIANTE a ADMIN)
       currentUserRole.role = adminRole;
-      currentUserRole.updatedBy = 'ADMINSUPREMO';
+      currentUserRole.updatedBy = 'SUPER_ADMIN';
       await this.userRolesRepository.save(currentUserRole);
     } else {
       // Crear nueva relación usuario-rol si no tenía rol en esta institución
@@ -299,8 +299,8 @@ export class UsersService {
         institution: institution,
         enabled: true,
         deleted: false,
-        createdBy: 'ADMINSUPREMO',
-        updatedBy: 'ADMINSUPREMO'
+        createdBy: 'SUPER_ADMIN',
+        updatedBy: 'SUPER_ADMIN'
       });
       await this.userRolesRepository.save(newUserRole);
     }
@@ -450,8 +450,8 @@ export class UsersService {
       enabled: true,
       deleted: false,
       last_login: new Date(),
-      createdBy: 'ADMINSUPREMO',
-      updatedBy: 'ADMINSUPREMO'
+      createdBy: 'SUPER_ADMIN',
+      updatedBy: 'SUPER_ADMIN'
     });
 
     // Guardar el usuario
@@ -464,8 +464,8 @@ export class UsersService {
       institution: institution,
       enabled: true,
       deleted: false,
-      createdBy: 'ADMINSUPREMO',
-      updatedBy: 'ADMINSUPREMO'
+      createdBy: 'SUPER_ADMIN',
+      updatedBy: 'SUPER_ADMIN'
     });
 
     await this.userRolesRepository.save(userRole);

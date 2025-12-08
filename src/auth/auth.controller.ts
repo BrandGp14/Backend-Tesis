@@ -42,7 +42,7 @@ export class AuthController {
   @Post('register-admin')
   @ApiOperation({ 
     summary: 'Registro de administrador supremo',
-    description: 'Endpoint especial para crear usuarios con rol ADMINSUPREMO. Requiere clave secreta.' 
+    description: 'Endpoint especial para crear usuarios con rol SUPER_ADMIN. Requiere clave secreta.' 
   })
   @ApiBody({ type: RegisterAdminDto })
   async registerAdmin(@Body() registerAdminDto: RegisterAdminDto) {
