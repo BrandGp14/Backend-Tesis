@@ -20,38 +20,71 @@ export class NotificationWorker {
 
     @Cron(CronExpression.EVERY_MINUTE)
     async run() {
-        this.logger.log('Starting notification worker');
+        this.logger.log('🔄 Starting notification worker');
 
-        if (this.isRunning) return;
+        if (this.isRunning) {
+            this.logger.log('⚠️ Worker already running, skipping.. .');
+            return;
+        }
 
         this.isRunning = true;
 
         try {
-            this.logger.log('Fetching notifications');
+            this.logger.log('📥 Fetching pending email notifications');
             const notifications = await this.notificationRepository
-                .find({ where: { type: NotificationType.EMAIL, status: NotificationStatus.PENDING, deleted: false, } });
+                . find({ 
+                    where: { 
+                        type: NotificationType. EMAIL, 
+                        status:  NotificationStatus.PENDING, 
+                        deleted: false 
+                    } 
+                });
 
-            this.logger.log(`Found ${notifications.length} notifications`);
+            this.logger.log(`📊 Found ${notifications.length} pending email notification(s)`);
+
+            if (notifications.length === 0) {
+                this.logger.log('✅ No pending emails to send');
+                return;
+            }
 
             for (const notification of notifications) {
-                const result = await sendEmail({ to: notification.to.split(';'), subject: notification.subject, body: notification.message, isHtml: notification.isHtml });
-                if (result.success) {
-                    notification.status = NotificationStatus.COMPLETED;
-                    notification.error = "";
-                } else {
+                this.logger.log(`📧 Processing notification ${notification.id} to:  ${notification.to}`);
+                
+                try {
+                    const result = await sendEmail({ 
+                        to: notification.to.split(';'), 
+                        subject: notification.subject, 
+                        body: notification.message, 
+                        isHtml: notification.isHtml 
+                    });
+                    
+                    if (result.success) {
+                        notification.status = NotificationStatus. COMPLETED;
+                        notification.error = "";
+                        this.logger.log(`✅ Email sent successfully for notification ${notification.id}`);
+                    } else {
+                        notification.status = NotificationStatus. ERROR;
+                        notification.error = result.message;
+                        this.logger.error(`❌ Failed to send email for notification ${notification.id}: ${result.message}`);
+                    }
+                } catch (error) {
                     notification.status = NotificationStatus.ERROR;
-                    notification.error = result.message;
+                    notification.error = error.message || 'Unknown error';
+                    this.logger.error(`❌ Exception sending email for notification ${notification.id}:`, error);
                 }
 
                 notification.updatedAt = new Date();
             }
 
-            this.logger.log('Updating notifications');
+            this.logger.log('💾 Updating notification statuses in database');
             await this.notificationRepository.save(notifications);
-            this.logger.log('Finished updating notifications');
+            this.logger.log(`✅ Successfully processed ${notifications. length} notification(s)`);
+            
         } catch (e) {
-            this.logger.error(e);
-        } finally { this.isRunning = false; }
-
+            this.logger.error('❌ Error in notification worker:', e);
+        } finally { 
+            this.isRunning = false; 
+            this.logger.log('🏁 Notification worker cycle completed');
+        }
     }
 }
