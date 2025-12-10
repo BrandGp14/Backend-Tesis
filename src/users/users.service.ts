@@ -18,6 +18,8 @@ import { RegisterOrganizadorDto, RegisterOrganizadorResponseDto } from './dto/re
 import { PasswordUtil } from '../common/utils/password.util';
 import { Role } from '../roles/entities/role.entity';
 import { InstitutionDepartment } from '../institutes/entities/institution-department.entity';
+import { PromoteToProfessorDto, DemoteFromProfessorDto } from './dto/promote-demote-professor.dto';
+import { Professor } from '../professors/entities/professor.entity';
 
 @Injectable()
 export class UsersService {
@@ -32,23 +34,46 @@ export class UsersService {
     private userRolesRepository: Repository<UserRole>,
     @InjectRepository(InstitutionDepartment)
     private departmentsRepository: Repository<InstitutionDepartment>,
+    @InjectRepository(Professor)
+    private professorsRepository: Repository<Professor>,
   ) { }
 
-  async search(page: number, size: number, enabled?: boolean) {
+  async search(page: number, size: number, enabled?: boolean, roleCode?: string) {
     const skip = (page - 1) * size;
 
-    const [users, totalElements] = await this.usersRepository.findAndCount({
-      order: { createdAt: 'DESC' },
-      skip: skip,
-      take: size,
-      where: [enabled !== undefined ? { enabled: enabled } : {}, { deleted: false }],
-    });
+    // Build the query
+    const queryBuilder = this.usersRepository.createQueryBuilder('user')
+      .leftJoinAndSelect('user.userRoles', 'userRole')
+      .leftJoinAndSelect('userRole.role', 'role')
+      .leftJoinAndSelect('userRole.institution', 'institution')
+      .leftJoinAndSelect('userRole.department', 'department')
+      .where('user.deleted = false');
+
+    // Filter by enabled status if provided
+    if (enabled !== undefined) {
+      queryBuilder.andWhere('user.enabled = :enabled', { enabled });
+    }
+
+    // Filter by role if provided
+    if (roleCode) {
+      queryBuilder.andWhere('userRole.deleted = false')
+        .andWhere('userRole.enabled = true')
+        .andWhere('role.code = :roleCode', { roleCode });
+    }
+
+    queryBuilder
+      .orderBy('user.createdAt', 'DESC')
+      .skip(skip)
+      .take(size);
+
+    const [users, totalElements] = await queryBuilder.getManyAndCount();
 
     const totalPage = Math.ceil(totalElements / size);
     const last = page >= totalPage;
 
     return new PagedResponse<UserDto>(users.map(u => u.toDto()), page, size, totalPage, totalElements, last);
   }
+
 
   async find(id: string) {
     const user = await this.usersRepository.findOne({
@@ -583,6 +608,238 @@ export class UsersService {
       departmentName: department.description,
       registrationDate: savedUser.createdAt.toISOString(),
       isActive: true
+    };
+  }
+
+  async getUsersAvailableForProfessorPromotion() {
+    // Buscar usuarios con rol USER que no tengan rol PROFESSOR
+    const usersWithUserRole = await this.usersRepository.createQueryBuilder('user')
+      .leftJoinAndSelect('user.userRoles', 'userRole')
+      .leftJoinAndSelect('userRole.role', 'role')
+      .leftJoinAndSelect('userRole.institution', 'institution')
+      .leftJoinAndSelect('userRole.department', 'department')
+      .where('user.deleted = false')
+      .andWhere('user.enabled = true')
+      .andWhere('userRole.deleted = false')
+      .andWhere('userRole.enabled = true')
+      .andWhere('role.code = :roleCode', { roleCode: 'USER' })
+      .orderBy('user.createdAt', 'DESC')
+      .getMany();
+
+    // Filtrar usuarios que NO tengan rol PROFESSOR
+    const availableUsers: any[] = [];
+    for (const user of usersWithUserRole) {
+      // Verificar si el usuario tiene rol PROFESSOR
+      const hasProfessorRole = await this.userRolesRepository.findOne({
+        where: {
+          user_id: user.id,
+          deleted: false,
+          enabled: true
+        },
+        relations: ['role']
+      }).then(ur => ur?.role.code === 'PROFESSOR');
+
+      if (!hasProfessorRole) {
+        // Obtener el rol USER del usuario
+        const userRole = user.userRoles.find(ur =>
+          ur.role.code === 'USER' && ur.enabled && !ur.deleted
+        );
+
+        availableUsers.push({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          name: `${user.firstName} ${user.lastName}`,
+          currentRole: 'USER',
+          studentCode: user.student_code,
+          institutionName: userRole?.institution?.description,
+          departmentName: userRole?.department?.description
+        });
+      }
+    }
+
+    return {
+      users: availableUsers,
+      total: availableUsers.length
+    };
+  }
+
+  async promoteUserToProfessor(promoteDto: PromoteToProfessorDto, adminUser: JwtDto) {
+    // Verificar que el departamento existe
+    const department = await this.departmentsRepository.findOne({
+      where: { id: promoteDto.departmentId, deleted: false, enabled: true },
+      relations: ['institution']
+    });
+
+    if (!department) {
+      throw new NotFoundException(`Departamento con ID ${promoteDto.departmentId} no encontrado o inactivo`);
+    }
+
+    // Buscar el usuario por email
+    const user = await this.usersRepository.findOne({
+      where: { email: promoteDto.email, deleted: false },
+      relations: ['userRoles', 'userRoles.role', 'userRoles.institution']
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario con email ${promoteDto.email} no encontrado`);
+    }
+
+    // Verificar que el usuario actualmente tiene rol USER
+    const userRole = user.userRoles.find(ur =>
+      ur.role.code === 'USER' && !ur.deleted && ur.enabled
+    );
+
+    if (!userRole) {
+      throw new BadRequestException('El usuario debe tener rol USER para ser promovido a PROFESSOR');
+    }
+
+    // Verificar que no existe ya como profesor
+    const existingProfessor = await this.professorsRepository.findOne({
+      where: { userId: user.id, isActive: true }
+    });
+
+    if (existingProfessor) {
+      throw new ConflictException('El usuario ya existe como profesor');
+    }
+
+    // Buscar el rol PROFESSOR
+    const professorRole = await this.rolesRepository.findOne({
+      where: { code: 'PROFESSOR', enabled: true, deleted: false }
+    });
+
+    if (!professorRole) {
+      throw new NotFoundException('Rol PROFESSOR no encontrado en el sistema');
+    }
+
+    // Crear el perfil de profesor
+    const professor = this.professorsRepository.create({
+      userId: user.id,
+      departmentId: department.id,
+      specialization: promoteDto.specialization || 'General',
+      isActive: true,
+      createdBy: adminUser.sub,
+      updatedBy: adminUser.sub
+    });
+
+    await this.professorsRepository.save(professor);
+
+    // Crear nueva relación usuario-rol para PROFESSOR
+    const newUserRole = this.userRolesRepository.create({
+      user: user,
+      role: professorRole,
+      institution: department.institution,
+      department: department,
+      department_id: department.id,
+      enabled: true,
+      deleted: false,
+      createdBy: adminUser.sub,
+      updatedBy: adminUser.sub
+    });
+
+    await this.userRolesRepository.save(newUserRole);
+
+    return {
+      id: professor.id,
+      userId: user.id,
+      email: user.email,
+      name: `${user.firstName} ${user.lastName}`,
+      previousRole: 'USER',
+      newRole: 'PROFESSOR',
+      departmentId: department.id,
+      departmentName: department.description,
+      promotedAt: new Date().toISOString()
+    };
+  }
+
+  async demoteProfessorToUser(demoteDto: DemoteFromProfessorDto, adminUser: JwtDto) {
+    // Buscar el usuario por email
+    const user = await this.usersRepository.findOne({
+      where: { email: demoteDto.email, deleted: false },
+      relations: ['userRoles', 'userRoles.role']
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario con email ${demoteDto.email} no encontrado`);
+    }
+
+    // Verificar que el usuario tiene rol PROFESSOR
+    const professorUserRole = user.userRoles.find(ur =>
+      ur.role.code === 'PROFESSOR' && !ur.deleted && ur.enabled
+    );
+
+    if (!professorUserRole) {
+      throw new BadRequestException('El usuario debe tener rol PROFESSOR para ser degradado');
+    }
+
+    // Buscar el perfil de profesor
+    const professor = await this.professorsRepository.findOne({
+      where: { userId: user.id, isActive: true }
+    });
+
+    if (!professor) {
+      throw new NotFoundException('Perfil de profesor no encontrado');
+    }
+
+    // Desactivar el perfil de profesor
+    professor.isActive = false;
+    professor.updatedBy = adminUser.sub;
+    await this.professorsRepository.save(professor);
+
+    // Desactivar el rol PROFESSOR
+    professorUserRole.enabled = false;
+    professorUserRole.deleted = true;
+    professorUserRole.updatedBy = adminUser.sub;
+    await this.userRolesRepository.save(professorUserRole);
+
+    return {
+      userId: user.id,
+      email: user.email,
+      name: `${user.firstName} ${user.lastName}`,
+      previousRole: 'PROFESSOR',
+      newRole: 'USER',
+      demotedAt: new Date().toISOString()
+    };
+  }
+
+  async getCurrentProfessors() {
+    // Buscar usuarios con rol PROFESSOR activo
+    const professorsWithRole = await this.usersRepository.createQueryBuilder('user')
+      .leftJoinAndSelect('user.userRoles', 'userRole')
+      .leftJoinAndSelect('userRole.role', 'role')
+      .leftJoinAndSelect('userRole.institution', 'institution')
+      .leftJoinAndSelect('userRole.department', 'department')
+      .where('user.deleted = false')
+      .andWhere('user.enabled = true')
+      .andWhere('userRole.deleted = false')
+      .andWhere('userRole.enabled = true')
+      .andWhere('role.code = :roleCode', { roleCode: 'PROFESSOR' })
+      .orderBy('user.createdAt', 'DESC')
+      .getMany();
+
+    // Mapear a formato de respuesta
+    const professors = professorsWithRole.map(user => {
+      const professorRole = user.userRoles.find(ur =>
+        ur.role.code === 'PROFESSOR' && ur.enabled && !ur.deleted
+      );
+
+      return {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        name: `${user.firstName} ${user.lastName}`,
+        currentRole: 'PROFESSOR',
+        studentCode: user.student_code,
+        institutionName: professorRole?.institution?.description,
+        departmentName: professorRole?.department?.description
+      };
+    });
+
+    return {
+      users: professors,
+      total: professors.length
     };
   }
 }

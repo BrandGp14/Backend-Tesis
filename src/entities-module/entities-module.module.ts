@@ -18,10 +18,11 @@ import { Role } from 'src/roles/entities/role.entity';
 import { UserRole } from 'src/users/entities/user-role.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Notification } from 'src/notification/entities/notification.entity';
+import { Professor } from 'src/professors/entities/professor.entity';
 
 @Module({
     imports: [TypeOrmModule.forFeature([User, UserRole, Role, RolePermission, Permission, Raffle, RaffleSerie, RaffleImage, RaffleGiftImage,
-        Ticket, RaffleNumber, Institution, InstitutionDepartment, InstituteConfiguration, Payment, PaymentTicket, PaymentTransaction, Notification])],
+        Ticket, RaffleNumber, Institution, InstitutionDepartment, InstituteConfiguration, Payment, PaymentTicket, PaymentTransaction, Notification, Professor])],
     exports: [TypeOrmModule],
 })
 export class EntitiesModuleModule { }

@@ -31,13 +31,14 @@ import { PromoteUserToAdminDto, CreateAdministratorResponseDto } from './dto/cre
 import { ChangeUserRoleDto, ChangeUserRoleResponseDto } from './dto/change-user-role.dto';
 import { RegisterAdminDto, RegisterAdminResponseDto } from './dto/register-admin.dto';
 import { RegisterOrganizadorDto, RegisterOrganizadorResponseDto } from './dto/register-organizador.dto';
+import { PromoteToProfessorDto, DemoteFromProfessorDto, PromoteToProfessorResponseDto, DemoteFromProfessorResponseDto } from './dto/promote-demote-professor.dto';
 
 @Controller('users')
 @ApiTags('Users')
 @ApiBearerAuth()
 @UseGuards(JwtAuthService, RolesGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Get('search')
   @ApiOperation({ summary: 'Lista paginada de usuarios' })
@@ -45,17 +46,18 @@ export class UsersController {
     @Query('page', new DefaultValuePipe(PageReference.PAGE), ParseIntPipe) page: number,
     @Query('size', new DefaultValuePipe(PageReference.SIZE), ParseIntPipe) size: number,
     @Query('enabled') enabled?: boolean,
+    @Query('role') role?: string,
   ) {
-    const users = await this.usersService.search(page, size, enabled);
+    const users = await this.usersService.search(page, size, enabled, role);
 
     return ApiResponse.success(users);
   }
 
   @Get('admins')
   @Roles('SUPER_ADMIN')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtiene lista de administradores del sistema',
-    description: 'Endpoint exclusivo para SUPER_ADMIN. Retorna usuarios con roles ADMIN y SUPER_ADMIN' 
+    description: 'Endpoint exclusivo para SUPER_ADMIN. Retorna usuarios con roles ADMIN y SUPER_ADMIN'
   })
   async getAdmins() {
     try {
@@ -68,9 +70,9 @@ export class UsersController {
 
   @Get('administrators')
   @Roles('SUPER_ADMIN')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtiene dashboard de administradores e instituciones',
-    description: 'Endpoint exclusivo para SUPER_ADMIN. Retorna administradores e instituciones para el dashboard' 
+    description: 'Endpoint exclusivo para SUPER_ADMIN. Retorna administradores e instituciones para el dashboard'
   })
   async getAdministratorsDashboard(@Query() query: AdministratorsQueryDto) {
     try {
@@ -81,6 +83,35 @@ export class UsersController {
     }
   }
 
+  @Get('available-for-professor-promotion')
+  @Roles('ORGANIZER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({
+    summary: 'Obtener usuarios disponibles para promover a PROFESSOR',
+    description: 'Retorna usuarios con rol USER que pueden ser promovidos a PROFESSOR. Excluye usuarios que ya tienen el rol PROFESSOR.'
+  })
+  async getAvailableForProfessorPromotion() {
+    try {
+      const users = await this.usersService.getUsersAvailableForProfessorPromotion();
+      return ApiResponse.success(users);
+    } catch (error) {
+      return ApiResponse.error(error.message, error.status || 500);
+    }
+  }
+
+  @Get('current-professors')
+  @Roles('ORGANIZER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({
+    summary: 'Obtener usuarios con rol PROFESSOR activo',
+    description: 'Retorna todos los usuarios que actualmente tienen el rol PROFESSOR activo y pueden ser degradados a USER.'
+  })
+  async getCurrentProfessors() {
+    try {
+      const professors = await this.usersService.getCurrentProfessors();
+      return ApiResponse.success(professors);
+    } catch (error) {
+      return ApiResponse.error(error.message, error.status || 500);
+    }
+  }
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener usuario por ID' })
@@ -106,8 +137,8 @@ export class UsersController {
   @Put(':id/profile')
   @ApiOperation({ summary: 'Actualizar perfil de estudiante' })
   async updateProfile(
-    @Param('id') id: string, 
-    @Body() updateProfileDto: UpdateProfileDto, 
+    @Param('id') id: string,
+    @Body() updateProfileDto: UpdateProfileDto,
     @Req() req: { user: JwtDto }
   ) {
     // Validar que el usuario solo pueda editar su propio perfil
@@ -119,11 +150,41 @@ export class UsersController {
     return ApiResponse.success(user);
   }
 
+  @Post('promote-to-professor')
+  @Roles('ORGANIZER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({
+    summary: 'Promover usuario a PROFESSOR',
+    description: 'Convierte un usuario con rol USER a PROFESSOR. Requiere especificar el departamento al que pertenecerá el profesor.'
+  })
+  async promoteToProfessor(@Body() promoteDto: PromoteToProfessorDto, @Req() req: { user: JwtDto }) {
+    try {
+      const professor = await this.usersService.promoteUserToProfessor(promoteDto, req.user);
+      return ApiResponse.success(professor);
+    } catch (error) {
+      return ApiResponse.error(error.message, error.status || 500);
+    }
+  }
+
+  @Post('demote-from-professor')
+  @Roles('ORGANIZER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({
+    summary: 'Degradar PROFESSOR a USER',
+    description: 'Convierte un profesor de vuelta a usuario con rol USER.'
+  })
+  async demoteFromProfessor(@Body() demoteDto: DemoteFromProfessorDto, @Req() req: { user: JwtDto }) {
+    try {
+      const user = await this.usersService.demoteProfessorToUser(demoteDto, req.user);
+      return ApiResponse.success(user);
+    } catch (error) {
+      return ApiResponse.error(error.message, error.status || 500);
+    }
+  }
+
   @Post('register-organizador')
   @Roles('ADMIN', 'SUPER_ADMIN')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Registrar organizador para departamentos de TECSUP',
-    description: 'Endpoint para que administradores registren organizadores asignados a departamentos específicos de TECSUP. Permite registrar 5 organizadores por departamento: Tecnología Digital, Mecánica y Aviación, Minería Procesos Químicos y Metalúrgicos, Electricidad y Electrónica, y Gestión y Producción.' 
+    description: 'Endpoint para que administradores registren organizadores asignados a departamentos específicos de TECSUP. Permite registrar 5 organizadores por departamento: Tecnología Digital, Mecánica y Aviación, Minería Procesos Químicos y Metalúrgicos, Electricidad y Electrónica, y Gestión y Producción.'
   })
   async registerOrganizador(@Body() registerDto: RegisterOrganizadorDto) {
     try {
@@ -133,4 +194,6 @@ export class UsersController {
       return ApiResponse.error(error.message, error.status || 500);
     }
   }
+
+
 }
