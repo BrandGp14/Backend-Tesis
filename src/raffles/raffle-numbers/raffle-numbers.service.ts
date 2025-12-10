@@ -211,6 +211,45 @@ export class RaffleNumbersService {
   }
 
   /**
+   * Marca números como vendidos FORZADAMENTE sin validar reservas (SOLO SIMULACIÓN)
+   * @param raffleId ID de la rifa
+   * @param numbers Números a marcar como vendidos
+   * @param ticketId ID del ticket
+   * @param userId Usuario que realiza la venta
+   * @returns Números marcados como vendidos
+   */
+  async forceMarkNumbersAsSold(
+    raffleId: string, 
+    numbers: number[], 
+    ticketId: string, 
+    userId: string
+  ): Promise<RaffleNumberDto[]> {
+    console.log(`🎯 MARCANDO NÚMEROS COMO VENDIDOS FORZADAMENTE: ${numbers.join(', ')}`);
+    
+    const raffleNumbers = await this.raffleNumberRepository
+      .createQueryBuilder('rn')
+      .where('rn.raffle_id = :raffleId', { raffleId })
+      .andWhere('rn.number IN (:...numbers)', { numbers })
+      .andWhere('rn.deleted = false')
+      .getMany();
+
+    if (raffleNumbers.length !== numbers.length) {
+      console.warn(`⚠️ Solo se encontraron ${raffleNumbers.length} de ${numbers.length} números solicitados`);
+    }
+
+    // Marcar como vendidos SIN validar estado previo
+    for (const raffleNumber of raffleNumbers) {
+      console.log(`🔧 Forzando venta del número ${raffleNumber.number} (estado anterior: ${raffleNumber.status})`);
+      raffleNumber.sell(ticketId, userId);
+    }
+
+    await this.raffleNumberRepository.save(raffleNumbers);
+    console.log(`✅ ${raffleNumbers.length} números marcados como vendidos forzadamente`);
+
+    return raffleNumbers.map(rn => rn.toDto());
+  }
+
+  /**
    * Obtiene los números reservados por un usuario específico
    * @param raffleId ID de la rifa
    * @param userId ID del usuario

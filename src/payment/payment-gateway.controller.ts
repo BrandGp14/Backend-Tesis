@@ -167,4 +167,38 @@ export class PaymentGatewayController {
     // TODO: Implementar historial de pagos
     return ApiResponse.success({ message: 'Historial de pagos en desarrollo' });
   }
+
+  @Post('simulate-confirmation/:transactionId')
+  @ApiOperation({ 
+    summary: 'SIMULATE payment confirmation (DEVELOPMENT ONLY)',
+    description: 'Simulates automatic payment confirmation for testing purposes. In production, this would be handled by webhooks.'
+  })
+  async simulatePaymentConfirmation(@Param('transactionId') transactionId: string) {
+    // Simular delay realista
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const mockConfirmationData = {
+      gateway_response: 'SUCCESS',
+      gateway_reference: `MOCK_${Date.now()}`,
+      confirmation_timestamp: new Date().toISOString(),
+      payment_method_confirmation: {
+        method: 'YAPE_SIMULATION',
+        reference_number: Math.random().toString(36).substr(2, 9).toUpperCase()
+      }
+    };
+    
+    const transaction = await this.paymentService.forceConfirmPayment(
+      transactionId, 
+      mockConfirmationData
+    );
+    
+    return ApiResponse.success({
+      message: '✅ Pago confirmado automáticamente (SIMULACIÓN)',
+      transaction_id: transaction.transaction_id,
+      payment_id: transaction.id,
+      status: transaction.status,
+      numbers: transaction.selected_numbers,
+      simulation_note: 'Este es un pago simulado para desarrollo. En producción usaríamos webhooks reales.',
+    });
+  }
 }

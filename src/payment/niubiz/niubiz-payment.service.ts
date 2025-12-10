@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
 import { NiubizAuthService } from './niubiz-auth.service';
 import { PaymentTransaction } from '../entity/payment-transaction.entity';
 import { PaymentRequestDto, PaymentResponseDto, PaymentMethod, PaymentStatus, YapePaymentDto } from '../dto/payment-request.dto';
@@ -119,110 +120,103 @@ export class NiubizPaymentService {
   }
 
   /**
-   * Procesa pago con Yape a través de Niubiz
+   * Procesa pago con Yape (SIMULADO)
    */
   private async processYapePayment(transaction: PaymentTransaction): Promise<any> {
-    const token = await this.niubizAuthService.getAccessToken();
-    const baseUrl = this.configService.get<string>('NIUBIZ_BASE_URL', 'https://apitestenv.vnforapps.com');
+    this.logger.log('🎯 Procesando pago YAPE simulado - Sin conexión externa - ACTUALIZADO');
     
-    const yapeRequest: NiubizYapeRequest = {
+    // Simular delay de procesamiento realista
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Generar datos de pago simulados completamente locales
+    const mockYapeData = {
+      transactionId: `YAPE_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      qrCode: this.generateMockQRCode('YAPE', Number(transaction.total_amount)),
+      paymentUrl: `mock://yape/pay/${transaction.transaction_id}`,
       amount: Number(transaction.total_amount),
       currency: transaction.currency_code,
-      description: `Compra de números de rifa - ${transaction.selected_numbers.join(', ')}`,
-      orderId: transaction.transaction_id,
-      customerEmail: transaction.customer_email,
-      customerName: transaction.customer_name,
-      customerDocument: transaction.customer_document,
-      customerPhone: transaction.customer_phone,
-      expirationTime: 30, // 30 minutos
+      instructions: `Para completar el pago:
+1. Abre tu app Yape
+2. Escanea el código QR o ingresa el monto: S/ ${transaction.total_amount}
+3. Confirma el pago
+4. Guarda el comprobante`,
     };
-
-    try {
-      // Llamada al API de Niubiz para Yape (endpoint simulado)
-      const response = await firstValueFrom(
-        this.httpService.post<NiubizYapeResponse>(
-          `${baseUrl}/api.ecommerce/v2/ecommerce/token/session/yape`,
-          yapeRequest,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            timeout: 15000,
-          }
-        )
-      );
-
-      return {
-        transactionId: response.data.transactionId,
-        qrCode: response.data.qrCode,
-        paymentUrl: response.data.paymentUrl,
-        amount: response.data.amount,
-        currency: response.data.currency,
-      };
-
-    } catch (error) {
-      this.logger.error('Error en API de Niubiz Yape', error);
-      
-      if (error.response?.status === 401) {
-        // Token expirado, invalidar caché
-        this.niubizAuthService.invalidateToken();
-        throw new HttpException('Error de autenticación con la pasarela de pagos', HttpStatus.UNAUTHORIZED);
-      }
-
-      throw new HttpException('Error al procesar pago con Yape', HttpStatus.BAD_GATEWAY);
-    }
+    
+    this.logger.log(`✅ Pago YAPE simulado generado: ${mockYapeData.transactionId}`);
+    return mockYapeData;
   }
 
   /**
-   * Procesa pago con Plin (similar a Yape)
+   * Procesa pago con Plin (SIMULADO)
    */
   private async processPlintPayment(transaction: PaymentTransaction): Promise<any> {
-    // Implementación similar a Yape pero con endpoint específico de Plin
-    const token = await this.niubizAuthService.getAccessToken();
-    const baseUrl = this.configService.get<string>('NIUBIZ_BASE_URL', 'https://apitestenv.vnforapps.com');
+    this.logger.log('🎯 Procesando pago PLIN simulado');
     
-    // Por ahora retornamos datos simulados para Plin
+    // Simular delay de procesamiento
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    
     return {
-      transactionId: `PLIN_${Date.now()}`,
+      transactionId: `PLIN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       qrCode: this.generateMockQRCode('PLIN', Number(transaction.total_amount)),
-      paymentUrl: `${baseUrl}/pay/plin/${transaction.transaction_id}`,
+      paymentUrl: `mock://plin/pay/${transaction.transaction_id}`,
       amount: Number(transaction.total_amount),
       currency: transaction.currency_code,
+      instructions: `Para completar el pago con Plin:
+1. Abre tu app Plin
+2. Escanea el código QR o ingresa el monto: S/ ${transaction.total_amount}
+3. Confirma el pago
+4. Guarda el comprobante`,
     };
   }
 
   /**
-   * Procesa transferencia bancaria
+   * Procesa transferencia bancaria (SIMULADO)
    */
   private async processTransferPayment(transaction: PaymentTransaction): Promise<any> {
-    // Para transferencias, proporcionamos datos de cuenta bancaria
+    this.logger.log('🎯 Procesando transferencia bancaria simulada');
+    
+    // Simular delay de procesamiento
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
     return {
-      transactionId: `TRANSFER_${Date.now()}`,
+      transactionId: `TRANSFER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       qrCode: null,
       paymentUrl: null,
-      bankAccount: this.configService.get<string>('BANK_ACCOUNT_NUMBER', '123-456-789-012'),
-      bankName: this.configService.get<string>('BANK_NAME', 'Banco de Pruebas'),
+      bankAccount: '194-123456789-012',
+      bankName: 'Banco de Crédito del Perú (BCP)',
+      bankAccountHolder: 'WasiRifa Perú SAC',
+      accountType: 'Cuenta Corriente',
       amount: Number(transaction.total_amount),
       currency: transaction.currency_code,
+      instructions: `Para completar la transferencia:
+1. Transfiere S/ ${transaction.total_amount} a la cuenta: 194-123456789-012
+2. Banco: BCP - WasiRifa Perú SAC
+3. Concepto: ${transaction.transaction_id}
+4. Envía el comprobante de transferencia`,
     };
   }
 
   /**
-   * Procesa pago con tarjeta
+   * Procesa pago con tarjeta (SIMULADO)
    */
   private async processCardPayment(transaction: PaymentTransaction): Promise<any> {
-    const token = await this.niubizAuthService.getAccessToken();
-    const baseUrl = this.configService.get<string>('NIUBIZ_BASE_URL', 'https://apitestenv.vnforapps.com');
+    this.logger.log('🎯 Procesando pago con tarjeta simulado');
     
-    // Para tarjetas, redirigimos a formulario de Niubiz
+    // Simular delay de procesamiento
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     return {
-      transactionId: `CARD_${Date.now()}`,
+      transactionId: `CARD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       qrCode: null,
-      paymentUrl: `${baseUrl}/pay/card/${transaction.transaction_id}`,
+      paymentUrl: `mock://card/pay/${transaction.transaction_id}`,
       amount: Number(transaction.total_amount),
       currency: transaction.currency_code,
+      instructions: `Pago con tarjeta - Simulación:
+1. Ingresa los datos de tu tarjeta
+2. Número: 4111 1111 1111 1111 (simulado)
+3. CVV: 123
+4. Fecha: 12/26
+5. Confirma el pago`,
     };
   }
 
@@ -289,6 +283,48 @@ export class NiubizPaymentService {
   }
 
   /**
+   * Confirma un pago FORZADAMENTE sin validar reservas (SOLO SIMULACIÓN)
+   */
+  async forceConfirmPayment(transactionId: string, gatewayData?: any): Promise<PaymentTransaction> {
+    this.logger.log(`🎯 CONFIRMACIÓN FORZADA de pago: ${transactionId}`);
+    
+    const transaction = await this.paymentTransactionRepository.findOne({
+      where: { transaction_id: transactionId, deleted: false }
+    });
+
+    if (!transaction) {
+      throw new BadRequestException('Transacción no encontrada');
+    }
+
+    if (!transaction.canBeCompleted()) {
+      throw new BadRequestException('La transacción no puede ser completada');
+    }
+
+    try {
+      // Generar UUID válido para el ticket
+      const simulatedTicketId = uuidv4();
+      
+      // Intentar marcar números como vendidos SIN validar reservas
+      await this.raffleNumbersService.forceMarkNumbersAsSold(
+        transaction.raffle_id,
+        transaction.selected_numbers,
+        simulatedTicketId,
+        transaction.user_id || transaction.customer_document
+      );
+      
+      this.logger.log(`✅ Números marcados como vendidos FORZADAMENTE: ${transaction.selected_numbers.join(', ')}`);
+    } catch (error) {
+      this.logger.error('Error al marcar números como vendidos forzadamente', error);
+      // En simulación, continuamos aunque falle
+    }
+
+    // Actualizar transacción
+    transaction.updateStatus(PaymentStatus.COMPLETED, transaction.user_id || transaction.customer_document, gatewayData);
+    
+    return await this.paymentTransactionRepository.save(transaction);
+  }
+
+  /**
    * Libera números reservados en caso de error
    */
   private async releaseReservedNumbers(raffleId: string, numbers: number[]): Promise<void> {
@@ -300,10 +336,14 @@ export class NiubizPaymentService {
   }
 
   /**
-   * Genera código QR simulado (en producción se usaría el real de Niubiz)
+   * Genera código QR simulado para demo
    */
   private generateMockQRCode(method: string, amount: number): string {
-    const qrData = `${method}_PAYMENT_${amount}_${Date.now()}`;
-    return Buffer.from(qrData).toString('base64');
+    // Generar una URL de QR code visual usando un servicio público
+    const qrData = `${method}|MONTO:${amount}|TIME:${Date.now()}|DEMO_WASIRIFA`;
+    const encodedData = encodeURIComponent(qrData);
+    
+    // Retornar URL del QR code que se puede mostrar como imagen
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedData}`;
   }
 }

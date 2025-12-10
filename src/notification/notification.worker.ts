@@ -18,36 +18,69 @@ export class NotificationWorker {
         private readonly notificationRepository: Repository<Notification>,
     ) { }
 
-    @Cron(CronExpression.EVERY_MINUTE)
+    @Cron(CronExpression.EVERY_5_MINUTES) // Cambiar a cada 5 minutos
     async run() {
-        this.logger.log('Starting notification worker');
-
-        if (this.isRunning) return;
+        if (this.isRunning) {
+            this.logger.log('Worker already running, skipping...');
+            return;
+        }
 
         this.isRunning = true;
 
         try {
-            this.logger.log('Fetching notifications');
+            // Usar query builder para mejor rendimiento y timeout
             const notifications = await this.notificationRepository
-                .find({ where: { type: NotificationType.EMAIL, status: NotificationStatus.PENDING, deleted: false, } });
+                .createQueryBuilder('notification')
+                .where('notification.type = :type', { type: NotificationType.EMAIL })
+                .andWhere('notification.status = :status', { status: NotificationStatus.PENDING })
+                .andWhere('notification.deleted = :deleted', { deleted: false })
+                .limit(10) // Limitar a 10 notificaciones por vez
+                .getMany();
 
-            this.logger.log(`Found ${notifications.length} notifications`);
+            if (notifications.length === 0) {
+                this.logger.log('No notifications to process');
+                return;
+            }
 
+            this.logger.log(`Processing ${notifications.length} notifications`);
+
+            // Procesar notificaciones de a una con manejo de errores
             for (const notification of notifications) {
-                const result = await sendEmail({ to: notification.to.split(';'), subject: notification.subject, body: notification.message, isHtml: notification.isHtml });
-                if (result.success) {
-                    notification.status = NotificationStatus.COMPLETED;
-                    notification.error = "";
-                } else {
+                try {
+                    const result = await Promise.race([
+                        sendEmail({ 
+                            to: notification.to.split(';'), 
+                            subject: notification.subject, 
+                            body: notification.message, 
+                            isHtml: notification.isHtml 
+                        }),
+                        new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('Email timeout')), 15000)
+                        )
+                    ]) as any;
+
+                    if (result.success) {
+                        notification.status = NotificationStatus.COMPLETED;
+                        notification.error = "";
+                    } else {
+                        notification.status = NotificationStatus.ERROR;
+                        notification.error = result.message || 'Unknown error';
+                    }
+                } catch (error) {
+                    this.logger.error(`Failed to send email for notification ${notification.id}:`, error);
                     notification.status = NotificationStatus.ERROR;
-                    notification.error = result.message;
+                    notification.error = error.message || 'Email sending failed';
                 }
 
                 notification.updatedAt = new Date();
+                
+                // Guardar cada notificación individualmente para evitar transacciones largas
+                try {
+                    await this.notificationRepository.save(notification);
+                } catch (error) {
+                    this.logger.error(`Failed to save notification ${notification.id}:`, error);
+                }
             }
-
-            this.logger.log('Updating notifications');
-            await this.notificationRepository.save(notifications);
             this.logger.log('Finished updating notifications');
         } catch (e) {
             this.logger.error(e);

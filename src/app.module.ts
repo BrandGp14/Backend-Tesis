@@ -16,6 +16,8 @@ import { UsersModule } from './users/users.module';
 import { NotificationModule } from './notification/notification.module';
 import { ProfessorsModule } from './professors/professors.module';
 import { ProfessorReportsModule } from './professor-reports/professor-reports.module';
+import { ProfessorAssignmentsModule } from './professor-assignments/professor-assignments.module';
+import { ReceiptModule } from './receipt/receipt.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -41,7 +43,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     UsersModule,
     NotificationModule,
     ProfessorsModule,
-    ProfessorReportsModule
+    ProfessorReportsModule,
+    ProfessorAssignmentsModule,
+    ReceiptModule
   ],
   exports: [TypeOrmModule],
   providers: [JwtService],

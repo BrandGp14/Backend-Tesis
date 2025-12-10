@@ -1,13 +1,36 @@
 import { createTransport } from 'nodemailer'
 import { mapFileOrExpressFileToAttachmentNodemailer } from './file.util'
+import { Injectable } from '@nestjs/common'
+
+@Injectable()
+export class EmailSenderUtil {
+  async sendEmail(options: {
+    to: string | string[], 
+    subject: string, 
+    body: string, 
+    isHtml?: boolean, 
+    files?: File[] | Express.Multer.File[]
+    attachments?: Array<{ filename: string; content: Buffer; contentType: string }>
+  }) {
+    return sendEmail(options);
+  }
+}
 
 export async function sendEmail({
     to,
     subject,
     body,
     isHtml = false,
-    files = []
-}: { to: string | string[], subject: string, body: string, isHtml?: boolean, files?: File[] | Express.Multer.File[] }) {
+    files = [],
+    attachments = []
+}: { 
+    to: string | string[], 
+    subject: string, 
+    body: string, 
+    isHtml?: boolean, 
+    files?: File[] | Express.Multer.File[],
+    attachments?: Array<{ filename: string; content: Buffer; contentType: string }>
+}) {
 
     const transporter = createTransport({
         host: 'smtp.gmail.com',
@@ -19,7 +42,17 @@ export async function sendEmail({
         }
     })
 
-    const attachments = await Promise.all(files.map(async (file: File | Express.Multer.File) => await mapFileOrExpressFileToAttachmentNodemailer(file)))
+    const fileAttachments = await Promise.all(files.map(async (file: File | Express.Multer.File) => await mapFileOrExpressFileToAttachmentNodemailer(file)))
+    
+    // Combinar attachments de archivos y los directos
+    const allAttachments = [
+        ...fileAttachments,
+        ...attachments.map(att => ({
+            filename: att.filename,
+            content: att.content,
+            contentType: att.contentType
+        }))
+    ];
 
     try {
         await transporter.sendMail({
@@ -28,7 +61,7 @@ export async function sendEmail({
             subject,
             html: isHtml ? body : undefined,
             text: !isHtml ? body : undefined,
-            attachments: attachments.length > 0 ? attachments : undefined
+            attachments: allAttachments.length > 0 ? allAttachments : undefined
         })
     } catch (e) {
         console.log(e)
