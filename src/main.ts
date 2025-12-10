@@ -19,7 +19,13 @@ async function bootstrap() {
   // const frontendOrigin = (process.env.FRONTEND_URL);
 
   app.enableCors({
-    origin: "http://localhost:3001",
+    origin: [
+      'http://localhost:3001',           
+      'http://localhost:3000',           
+      'https://www.wasirifa.digital',    
+      'https://wasirifa.digital',        
+      'https://wasirifa-frontend.vercel.app', 
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'institution'],
