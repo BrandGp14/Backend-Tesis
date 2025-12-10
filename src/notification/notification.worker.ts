@@ -20,14 +20,17 @@ export class NotificationWorker {
 
     @Cron(CronExpression.EVERY_5_MINUTES) // Cambiar a cada 5 minutos
     async run() {
+        this.logger.log('🔄 Starting notification worker');
+
         if (this.isRunning) {
-            this.logger.log('Worker already running, skipping...');
+            this.logger.log('⚠️ Worker already running, skipping...');
             return;
         }
 
         this.isRunning = true;
 
         try {
+            this.logger.log('📥 Fetching pending email notifications');
             // Usar query builder para mejor rendimiento y timeout
             const notifications = await this.notificationRepository
                 .createQueryBuilder('notification')
@@ -37,8 +40,10 @@ export class NotificationWorker {
                 .limit(10) // Limitar a 10 notificaciones por vez
                 .getMany();
 
+            this.logger.log(`📊 Found ${notifications.length} pending email notification(s)`);
+
             if (notifications.length === 0) {
-                this.logger.log('No notifications to process');
+                this.logger.log('✅ No pending emails to send');
                 return;
             }
 
@@ -46,6 +51,8 @@ export class NotificationWorker {
 
             // Procesar notificaciones de a una con manejo de errores
             for (const notification of notifications) {
+                this.logger.log(`📧 Processing notification ${notification.id} to: ${notification.to}`);
+                
                 try {
                     const result = await Promise.race([
                         sendEmail({ 
@@ -62,12 +69,14 @@ export class NotificationWorker {
                     if (result.success) {
                         notification.status = NotificationStatus.COMPLETED;
                         notification.error = "";
+                        this.logger.log(`✅ Email sent successfully for notification ${notification.id}`);
                     } else {
                         notification.status = NotificationStatus.ERROR;
                         notification.error = result.message || 'Unknown error';
+                        this.logger.error(`❌ Failed to send email for notification ${notification.id}: ${result.message}`);
                     }
                 } catch (error) {
-                    this.logger.error(`Failed to send email for notification ${notification.id}:`, error);
+                    this.logger.error(`❌ Exception sending email for notification ${notification.id}:`, error);
                     notification.status = NotificationStatus.ERROR;
                     notification.error = error.message || 'Email sending failed';
                 }
@@ -81,10 +90,14 @@ export class NotificationWorker {
                     this.logger.error(`Failed to save notification ${notification.id}:`, error);
                 }
             }
-            this.logger.log('Finished updating notifications');
-        } catch (e) {
-            this.logger.error(e);
-        } finally { this.isRunning = false; }
 
+            this.logger.log(`✅ Successfully processed ${notifications.length} notification(s)`);
+            
+        } catch (e) {
+            this.logger.error('❌ Error in notification worker:', e);
+        } finally { 
+            this.isRunning = false; 
+            this.logger.log('🏁 Notification worker cycle completed');
+        }
     }
 }
